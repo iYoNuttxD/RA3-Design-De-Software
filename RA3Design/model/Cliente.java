@@ -28,9 +28,8 @@ public class Cliente {
     @JoinColumn(name = "personaltrainer_id")
     private PersonalTrainer personalTrainer;
 
-    public Cliente(int id, String nome, String email, String telefone, Date data_nascimento, PlanoTreino planoTreino,
+    public Cliente(String nome, String email, String telefone, Date data_nascimento, PlanoTreino planoTreino,
                    List<Reserva> reservas, PersonalTrainer personalTrainer) {
-        this.id = id;
         this.nome = nome;
         this.email = email;
         this.telefone = telefone;
@@ -40,7 +39,8 @@ public class Cliente {
         this.personalTrainer = personalTrainer;
     }
 
-    // Getters e Setters
+    public Cliente () {}
+
     public int getId() {
         return id;
     }
