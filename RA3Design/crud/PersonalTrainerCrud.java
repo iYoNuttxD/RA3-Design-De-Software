@@ -23,7 +23,6 @@ public class PersonalTrainerCrud {
             transaction = entityManager.getTransaction();
             transaction.begin();
     
-            // Criação do objeto PersonalTrainer
             PersonalTrainer personalTrainer = new PersonalTrainer();
     
             System.out.print("Digite o nome do personal trainer: ");
@@ -35,18 +34,15 @@ public class PersonalTrainerCrud {
             System.out.print("Digite o telefone do personal trainer: ");
             personalTrainer.setTelefone(scanner.nextLine());
     
-            // Persistir o personal trainer
             entityManager.persist(personalTrainer);
             entityManager.flush();
     
-            // Associar clientes
             System.out.print("Deseja associar clientes ao personal trainer? (s/n): ");
             String respostaClientes = scanner.nextLine();
             if (respostaClientes.equalsIgnoreCase("s")) {
                 List<Cliente> clientesAssociados = new ArrayList<>();
                 String continuar;
                 do {
-                    // Agora, buscamos o cliente pelo nome e email
                     System.out.print("Digite o nome do cliente para associar: ");
                     String nomeCliente = scanner.nextLine();
     
@@ -54,7 +50,6 @@ public class PersonalTrainerCrud {
                     String emailCliente = scanner.nextLine();
 
     
-                    // Pergunta se o usuário deseja continuar associando clientes
                     System.out.print("Deseja associar outro cliente? (s/n): ");
                     continuar = scanner.nextLine();
                 } while (continuar.equalsIgnoreCase("s"));
@@ -62,7 +57,6 @@ public class PersonalTrainerCrud {
                 personalTrainer.setClientes(clientesAssociados);
             }
     
-            // Associar plano de treino
             System.out.print("Deseja associar um plano de treino ao personal trainer? (s/n): ");
             String respostaPlano = scanner.nextLine();
             if (respostaPlano.equalsIgnoreCase("s")) {
@@ -92,7 +86,6 @@ public class PersonalTrainerCrud {
                 }
             }
     
-            // Commit da transação
             transaction.commit();
             System.out.println("Personal Trainer criado com sucesso!");
     
@@ -129,34 +122,29 @@ public static void updatePersonalTrainer() {
         System.out.print("Digite a especialidade do personal trainer a ser atualizado: ");
         String especialidadePersonal = scanner.nextLine();
 
-        // Busca o PersonalTrainer pelo nome e especialidade
         PersonalTrainer personalTrainer = findPersonalByDetails(entityManager, nomePersonal, especialidadePersonal);
 
         if (personalTrainer != null) {
             System.out.println("Personal trainer encontrado. Atualize as informações ou pressione Enter para manter o valor atual.");
 
-            // Atualiza o nome
             System.out.print("Nome atual: " + personalTrainer.getNome() + ". Novo nome (ou pressione Enter para manter): ");
             String nome = scanner.nextLine();
             if (!nome.isEmpty()) {
                 personalTrainer.setNome(nome);
             }
 
-            // Atualiza a especialidade
             System.out.print("Especialidade atual: " + personalTrainer.getEspecialidade() + ". Nova especialidade (ou pressione Enter para manter): ");
             String especialidade = scanner.nextLine();
             if (!especialidade.isEmpty()) {
                 personalTrainer.setEspecialidade(especialidade);
             }
 
-            // Atualiza o telefone
             System.out.print("Telefone atual: " + personalTrainer.getTelefone() + ". Novo telefone (ou pressione Enter para manter): ");
             String telefone = scanner.nextLine();
             if (!telefone.isEmpty()) {
                 personalTrainer.setTelefone(telefone);
             }
 
-            // Pergunta se o usuário quer atualizar o plano de treino
             System.out.print("Deseja atualizar o plano de treino deste personal trainer? (s/n): ");
             String atualizarPlano = scanner.nextLine();
             if (atualizarPlano.equalsIgnoreCase("s")) {
@@ -175,7 +163,6 @@ public static void updatePersonalTrainer() {
                 personalTrainer.setPlanoTreino(novoPlano);
             }
 
-            // Pergunta se o usuário quer atualizar os clientes associados
             System.out.print("Deseja atualizar os clientes associados a este personal trainer? (s/n): ");
             String atualizarClientes = scanner.nextLine();
             if (atualizarClientes.equalsIgnoreCase("s")) {
@@ -185,7 +172,6 @@ public static void updatePersonalTrainer() {
                     System.out.print("Deseja atualizar este cliente? (s/n): ");
                     String atualizarCliente = scanner.nextLine();
                     if (atualizarCliente.equalsIgnoreCase("s")) {
-                        // Atualiza os dados do cliente
                         System.out.print("Novo nome (ou pressione Enter para manter): ");
                         String nomeCliente = scanner.nextLine();
                         if (!nomeCliente.isEmpty()) {
@@ -204,16 +190,13 @@ public static void updatePersonalTrainer() {
                             cliente.setTelefone(telefoneCliente);
                         }
 
-                        // Persistir a atualização do cliente
                         entityManager.merge(cliente);
                     }
                 }
             }
 
-            // Persiste as mudanças no banco de dados
             entityManager.merge(personalTrainer);
 
-            // Commit da transação
             transaction.commit();
             System.out.println("Personal Trainer atualizado com sucesso!");
 
@@ -254,7 +237,6 @@ public static void updatePersonalTrainer() {
             System.out.print("Digite a especialidade do personal trainer a ser excluído: ");
             String especialidadePersonal = scanner.nextLine();
 
-            // Busca o PersonalTrainer pelo nome e especialidade
             PersonalTrainer personalTrainer = findPersonalByDetails(entityManager, nomePersonal, especialidadePersonal);
 
             if (personalTrainer == null) {
@@ -267,10 +249,14 @@ public static void updatePersonalTrainer() {
             String confirmacao = scanner.nextLine();
 
             if (confirmacao.equalsIgnoreCase("s")) {
-                // Antes de excluir, verificamos se o PersonalTrainer tem clientes associados
                 if (personalTrainer.getClientes() != null && !personalTrainer.getClientes().isEmpty()) {
                     System.out.println("Este personal trainer possui clientes associados. Não é possível excluí-lo.");
-                } else {
+                } 
+                else if (personalTrainer.getPlanosTreino() != null && !personalTrainer.getPlanosTreino().isEmpty()) {
+                    System.out.println("Este personal trainer possui planos de treino vinculados. Não é possível excluí-lo.");
+                } 
+
+                else {
                     entityManager.remove(personalTrainer);
                     transaction.commit();
                     System.out.println("Personal trainer excluído com sucesso!");
@@ -278,7 +264,7 @@ public static void updatePersonalTrainer() {
             } else {
                 System.out.println("Exclusão cancelada.");
             }
-
+            
         } catch (RuntimeException exception) {
             if (transaction != null && transaction.isActive()) {
                 try {
