@@ -17,11 +17,15 @@ public class PersonalTrainer {
     @OneToMany(mappedBy = "personalTrainer")
     private List<Cliente> clientes;
 
-    public PersonalTrainer(String nome, String especialidade, String telefone, List<Cliente> clientes) {
+    @OneToMany(mappedBy = "personalTrainer")
+    private List<PlanoTreino> planoTreinos;
+
+    public PersonalTrainer(String nome, String especialidade, String telefone, List<Cliente> clientes, List<PlanoTreino> planoTreinos) {
         this.nome = nome;
         this.especialidade = especialidade;
         this.telefone = telefone;
         this.clientes = clientes;
+        this.planoTreinos = planoTreinos;
     }
 
     public PersonalTrainer() {}
