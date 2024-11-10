@@ -22,7 +22,7 @@ public class PersonalTrainerCrud {
             entityManager = emFactory.createEntityManager();
             transaction = entityManager.getTransaction();
             transaction.begin();
-    
+
             PersonalTrainer personalTrainer = new PersonalTrainer();
     
             System.out.print("Digite o nome do personal trainer: ");
@@ -219,7 +219,6 @@ public static void updatePersonalTrainer() {
         }
     }
 }
-
     public static void deletePersonalTrainer() {
         Scanner scanner = new Scanner(System.in);
         EntityManager entityManager = null;
