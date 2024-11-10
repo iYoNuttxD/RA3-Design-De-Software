@@ -382,6 +382,21 @@ public class ClienteCrud {
                 return;
             }
 
+            if (cliente.getPlanoTreino() != null) {
+                System.out.println("O cliente possui um plano de treino associado. Exclua o plano de treino antes de excluir o cliente.");
+                return;
+            }
+
+            if (cliente.getReservas() != null && !cliente.getReservas().isEmpty()) {
+                System.out.println("O cliente possui reservas associadas. Exclua as reservas antes de excluir o cliente.");
+                return;
+            }
+
+            if (cliente.getPersonalTrainer() != null) {
+                System.out.println("O cliente possui um personal trainer associado. Remova o vínculo com o personal trainer antes de excluir o cliente.");
+                return;
+            }
+
             System.out.println("Cliente encontrado: " + cliente.getNome() + " - " + cliente.getEmail());
             System.out.print("Tem certeza que deseja excluir este cliente? (s/n): ");
             String confirmacao = scanner.nextLine();
