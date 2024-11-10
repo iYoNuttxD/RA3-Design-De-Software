@@ -1,6 +1,7 @@
 package RA3Design;
 
 import RA3Design.crud.ClienteCrud;
+import RA3Design.crud.PersonalTrainerCrud;
 
 import java.util.Scanner;
 
@@ -10,9 +11,10 @@ public class Main {
         int opcao;
 
         do {
+            // Exibe o menu
             System.out.println("========= Menu =========");
             System.out.println("1 - CRUD de Cliente");
-            System.out.println("2 - Outra opção (futuramente)");
+            System.out.println("2 - CRUD de Personal Trainer");
             System.out.println("0 - Sair");
             System.out.print("Escolha uma opção: ");
             opcao = scanner.nextInt();
@@ -23,7 +25,7 @@ public class Main {
                     exibirMenuCrudCliente(scanner);
                     break;
                 case 2:
-                    System.out.println("Opção 2 selecionada (em breve).");
+                    exibirMenuCrudPersonalTrainer(scanner);
                     break;
                 case 0:
                     System.out.println("Saindo...");
@@ -40,6 +42,7 @@ public class Main {
         int opcaoCrudCliente;
 
         do {
+            // Menu específico para CRUD de Cliente
             System.out.println("========= CRUD Cliente =========");
             System.out.println("1 - Criar Cliente");
             System.out.println("2 - Ler Clientes");
@@ -70,5 +73,41 @@ public class Main {
                     System.out.println("Opção inválida. Tente novamente.");
             }
         } while (opcaoCrudCliente != 0);
+    }
+
+    private static void exibirMenuCrudPersonalTrainer(Scanner scanner) {
+        int opcaoCrudPersonalTrainer;
+
+        do {
+            System.out.println("========= CRUD Personal Trainer =========");
+            System.out.println("1 - Criar Personal Trainer");
+            System.out.println("2 - Ler Personal Trainers");
+            System.out.println("3 - Atualizar Personal Trainer");
+            System.out.println("4 - Excluir Personal Trainer");
+            System.out.println("0 - Voltar ao Menu Principal");
+            System.out.print("Escolha uma opção: ");
+            opcaoCrudPersonalTrainer = scanner.nextInt();
+            scanner.nextLine();
+
+            switch (opcaoCrudPersonalTrainer) {
+                case 1:
+                    PersonalTrainerCrud.createPersonalTrainer();
+                    break;
+                case 2:
+                    PersonalTrainerCrud.readPersonalTrainers();
+                    break;
+                case 3:
+                    PersonalTrainerCrud.updatePersonalTrainer();
+                    break;
+                case 4:
+                    PersonalTrainerCrud.deletePersonalTrainer();
+                    break;
+                case 0:
+                    System.out.println("Voltando ao menu principal...");
+                    break;
+                default:
+                    System.out.println("Opção inválida. Tente novamente.");
+            }
+        } while (opcaoCrudPersonalTrainer != 0);
     }
 }
