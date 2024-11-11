@@ -315,6 +315,24 @@ public class ClienteCrud {
                     }
                 }
 
+                System.out.print("Deseja remover o relacionamento de plano de treino do cliente? (s/n): ");
+                String respostaRemoverPlano = scanner.nextLine();
+                if (respostaRemoverPlano.equalsIgnoreCase("s")) {
+                    if (cliente.getPlanoTreino() != null) {
+                        PlanoTreino planoTreino = cliente.getPlanoTreino();
+
+                        cliente.setPlanoTreino(null);
+                        planoTreino.setCliente(null);
+
+                        entityManager.merge(cliente);
+                        entityManager.merge(planoTreino);
+
+                        System.out.println("Relacionamento de plano de treino removido com sucesso!");
+                    } else {
+                        System.out.println("Este cliente não possui um plano de treino associado.");
+                    }
+                }
+
                 System.out.print("Deseja atualizar o personal trainer do cliente? (s/n): ");
                 String respostaPersonal = scanner.nextLine();
                 if (respostaPersonal.equalsIgnoreCase("s")) {
@@ -370,6 +388,25 @@ public class ClienteCrud {
                         System.out.println("Personal trainer com os parâmetros fornecidos não encontrado.");
                     }
                 }
+
+                System.out.print("Deseja remover o relacionamento de personal trainer do cliente? (s/n): ");
+                String respostaRemoverPersonal = scanner.nextLine();
+                if (respostaRemoverPersonal.equalsIgnoreCase("s")) {
+                    if (cliente.getPersonalTrainer() != null) {
+                        PersonalTrainer personalTrainer = cliente.getPersonalTrainer();
+
+                        cliente.setPersonalTrainer(null);
+                        personalTrainer.getClientes().remove(cliente);
+
+                        entityManager.merge(cliente);
+                        entityManager.merge(personalTrainer);
+
+                        System.out.println("Relacionamento de personal trainer removido com sucesso!");
+                    } else {
+                        System.out.println("Este cliente não possui um personal trainer associado.");
+                    }
+                }
+
 
 
                 System.out.print("Deseja atualizar as reservas do cliente? (s/n): ");
@@ -446,6 +483,44 @@ public class ClienteCrud {
                     System.out.print("Deseja adicionar outra reserva? (s/n): ");
                     respostaReserva1 = scanner.nextLine();
                 }
+
+                System.out.print("Deseja remover uma reserva do cliente? (s/n): ");
+                String respostaRemoverReserva = scanner.nextLine();
+                while (respostaRemoverReserva.equalsIgnoreCase("s")) {
+                    System.out.print("Digite a data da reserva que deseja remover (dd/MM/yyyy): ");
+                    String dataReservaRemoverStr = scanner.nextLine();
+
+                    System.out.print("Digite a hora da reserva que deseja remover (HH:mm): ");
+                    String horaReservaRemoverStr = scanner.nextLine();
+
+                    Date dataReservaRemover = null;
+                    Date horaReservaRemover = null;
+                    try {
+                        java.text.SimpleDateFormat sdfData = new java.text.SimpleDateFormat("dd/MM/yyyy");
+                        java.text.SimpleDateFormat sdfHora = new java.text.SimpleDateFormat("HH:mm");
+                        dataReservaRemover = sdfData.parse(dataReservaRemoverStr);
+                        horaReservaRemover = sdfHora.parse(horaReservaRemoverStr);
+                    } catch (java.text.ParseException e) {
+                        System.out.println("Erro ao converter data ou hora da reserva.");
+                    }
+
+                    Reserva reserva = findReservaByDataHora(entityManager, dataReservaRemover, horaReservaRemover);
+                    if (reserva != null && cliente.getReservas().contains(reserva)) {
+                        cliente.getReservas().remove(reserva);
+                        reserva.setCliente(null);
+
+                        entityManager.merge(cliente);
+                        entityManager.merge(reserva);
+
+                        System.out.println("Reserva removida com sucesso!");
+                    } else {
+                        System.out.println("Reserva com os parâmetros fornecidos não encontrada ou não está associada a este cliente.");
+                    }
+
+                    System.out.print("Deseja remover outra reserva? (s/n): ");
+                    respostaRemoverReserva = scanner.nextLine();
+                }
+
 
                 transaction.commit();
                 System.out.println("Cliente atualizado com sucesso!");

@@ -266,6 +266,46 @@ public class PersonalTrainerCrud {
                     respostaPlano1 = scanner.nextLine();
                 }
 
+                System.out.print("Deseja remover um plano de treino do personal trainer? (s/n): ");
+                String respostaRemoverPlano = scanner.nextLine();
+                while (respostaRemoverPlano.equalsIgnoreCase("s")) {
+                    System.out.print("Digite a descrição do plano de treino que deseja remover: ");
+                    String descricaoPlanoRemover = scanner.nextLine();
+
+                    System.out.print("Digite a data de início do plano de treino (dd/MM/yyyy): ");
+                    String dataInicioRemoverStr = scanner.nextLine();
+                    Date dataInicioRemover = null;
+                    try {
+                        dataInicioRemover = new java.text.SimpleDateFormat("dd/MM/yyyy").parse(dataInicioRemoverStr);
+                    } catch (java.text.ParseException e) {
+                        System.out.println("Erro ao converter a data de início.");
+                    }
+
+                    System.out.print("Digite a data de fim do plano de treino (dd/MM/yyyy): ");
+                    String dataFimRemoverStr = scanner.nextLine();
+                    Date dataFimRemover = null;
+                    try {
+                        dataFimRemover = new java.text.SimpleDateFormat("dd/MM/yyyy").parse(dataFimRemoverStr);
+                    } catch (java.text.ParseException e) {
+                        System.out.println("Erro ao converter a data de fim.");
+                    }
+
+                    PlanoTreino planoTreino = findPlanoByDescricaoData(entityManager, descricaoPlanoRemover, dataInicioRemover, dataFimRemover);
+                    if (planoTreino != null && personalTrainer.getPlanosTreino().contains(planoTreino)) {
+                        personalTrainer.getPlanosTreino().remove(planoTreino);
+                        planoTreino.setPersonalTrainer(null);
+
+                        entityManager.merge(personalTrainer);
+                        entityManager.merge(planoTreino);
+
+                        System.out.println("Plano de treino removido com sucesso!");
+                    } else {
+                        System.out.println("Plano de treino com os parâmetros fornecidos não encontrado ou não está associado a este personal trainer.");
+                    }
+
+                    System.out.print("Deseja remover outro plano de treino? (s/n): ");
+                    respostaRemoverPlano = scanner.nextLine();
+                }
 
 
                 System.out.print("Deseja atualizar os clientes do Personal Trainer? (s/n): ");
@@ -339,6 +379,33 @@ public class PersonalTrainerCrud {
                     System.out.print("Deseja adicionar outro cliente? (s/n): ");
                     respostaCliente1 = scanner.nextLine();
                 }
+
+                System.out.print("Deseja remover um cliente do personal trainer? (s/n): ");
+                String respostaRemoverCliente = scanner.nextLine();
+                while (respostaRemoverCliente.equalsIgnoreCase("s")) {
+                    System.out.print("Digite o nome do cliente que deseja remover: ");
+                    String nomeClienteRemover = scanner.nextLine();
+
+                    System.out.print("Digite o e-mail do cliente que deseja remover: ");
+                    String emailClienteRemover = scanner.nextLine();
+
+                    Cliente cliente = findClienteByNomeEmail(entityManager, nomeClienteRemover, emailClienteRemover);
+                    if (cliente != null && personalTrainer.getClientes().contains(cliente)) {
+                        personalTrainer.getClientes().remove(cliente);
+                        cliente.setPersonalTrainer(null);
+
+                        entityManager.merge(personalTrainer);
+                        entityManager.merge(cliente);
+
+                        System.out.println("Cliente removido com sucesso!");
+                    } else {
+                        System.out.println("Cliente com os parâmetros fornecidos não encontrado ou não está associado a este personal trainer.");
+                    }
+
+                    System.out.print("Deseja remover outro cliente? (s/n): ");
+                    respostaRemoverCliente = scanner.nextLine();
+                }
+
 
                 entityManager.merge(personalTrainer);
 
