@@ -94,7 +94,7 @@ public class Main {
                     PersonalTrainerCrud.createPersonalTrainer();
                     break;
                 case 2:
-                    PersonalTrainerCrud.readPersonalTrainers();
+                    PersonalTrainerCrud.readPersonalTrainer();
                     break;
                 case 3:
                     PersonalTrainerCrud.updatePersonalTrainer();
