@@ -81,14 +81,15 @@ public class ClienteCrud {
                 }
 
                 PlanoTreino planoTreino = findPlanoByDescricaoData(entityManager, descricaoPlano, dataInicio, dataFim);
-                if (planoTreino != null) {
+
+                if (planoTreino == null) {
+                    System.out.println("Plano de treino com os parâmetros fornecidos não encontrado.");
+                } else {
                     cliente.setPlanoTreino(planoTreino);
                     planoTreino.setCliente(cliente);
                     entityManager.merge(cliente);
                     entityManager.merge(planoTreino);
                     System.out.println("Plano de treino associado com sucesso!");
-                } else {
-                    System.out.println("Plano de treino com os parâmetros fornecidos não encontrado.");
                 }
             }
 
@@ -110,6 +111,7 @@ public class ClienteCrud {
                     cliente.setPersonalTrainer(personalTrainer);
                     personalTrainer.getClientes().add(cliente);
                     entityManager.merge(personalTrainer);
+                    entityManager.merge(cliente);
                     System.out.println("Personal trainer associado com sucesso!");
                 } else {
                     System.out.println("Personal trainer com os parâmetros fornecidos não encontrado.");
@@ -118,7 +120,6 @@ public class ClienteCrud {
 
             System.out.print("Deseja associar reservas ao cliente? (s/n): ");
             String respostaReserva = scanner.nextLine();
-
             if (respostaReserva.equalsIgnoreCase("s")) {
                 List<Reserva> reservasCliente = new ArrayList<>();
                 String continuar;
@@ -238,10 +239,53 @@ public class ClienteCrud {
                 System.out.print("Deseja atualizar o plano de treino do cliente? (s/n): ");
                 String respostaPlano = scanner.nextLine();
                 if (respostaPlano.equalsIgnoreCase("s")) {
-                    System.out.print("Digite a descrição do novo plano de treino: ");
+                    PlanoTreino planoTreino = cliente.getPlanoTreino();
+                    if (planoTreino != null) {
+                        System.out.print("Descrição atual: " + planoTreino.getDescricao() + ". Nova descrição (ou pressione Enter para manter): ");
+                        String descricao = scanner.nextLine();
+                        if (!descricao.isEmpty()) {
+                            planoTreino.setDescricao(descricao);
+                        }
+
+                        System.out.print("Data de início atual: " + new java.text.SimpleDateFormat("dd/MM/yyyy").format(planoTreino.getDataInicio())
+                                + ". Nova data de início (dd/MM/yyyy) (ou pressione Enter para manter): ");
+                        String novaDataInicioStr = scanner.nextLine();
+                        if (!novaDataInicioStr.isEmpty()) {
+                            try {
+                                Date novaDataInicio = new java.text.SimpleDateFormat("dd/MM/yyyy").parse(novaDataInicioStr);
+                                planoTreino.setDataInicio(novaDataInicio);
+                            } catch (java.text.ParseException e) {
+                                System.out.println("Erro ao converter a nova data de início.");
+                            }
+                        }
+
+                        System.out.print("Data de fim atual: " + new java.text.SimpleDateFormat("dd/MM/yyyy").format(planoTreino.getDataFim())
+                                + ". Nova data de fim (dd/MM/yyyy) (ou pressione Enter para manter): ");
+                        String novaDataFimStr = scanner.nextLine();
+                        if (!novaDataFimStr.isEmpty()) {
+                            try {
+                                Date novaDataFim = new java.text.SimpleDateFormat("dd/MM/yyyy").parse(novaDataFimStr);
+                                planoTreino.setDataFim(novaDataFim);
+                            } catch (java.text.ParseException e) {
+                                System.out.println("Erro ao converter a nova data de fim.");
+                            }
+                        }
+
+                        entityManager.merge(planoTreino);
+                        System.out.println("Plano de treino atualizado com sucesso!");
+                    } else {
+                        System.out.println("Este cliente não possui um plano de treino associado.");
+                    }
+                }
+
+
+                System.out.print("Deseja adicionar um novo relacionamento de plano de treino ao cliente? (s/n): ");
+                String respostaPlano1 = scanner.nextLine();
+                if (respostaPlano1.equalsIgnoreCase("s")) {
+                    System.out.print("Digite a descrição do plano de treino que deseja adicionar: ");
                     String descricaoPlano = scanner.nextLine();
 
-                    System.out.print("Digite a data de início do novo plano de treino (dd/MM/yyyy): ");
+                    System.out.print("Digite a data de início do plano de treino (dd/MM/yyyy): ");
                     String dataInicioStr = scanner.nextLine();
                     Date dataInicio = null;
                     try {
@@ -250,7 +294,7 @@ public class ClienteCrud {
                         System.out.println("Erro ao converter a data de início.");
                     }
 
-                    System.out.print("Digite a data de fim do novo plano de treino (dd/MM/yyyy): ");
+                    System.out.print("Digite a data de fim do plano de treino (dd/MM/yyyy): ");
                     String dataFimStr = scanner.nextLine();
                     Date dataFim = null;
                     try {
@@ -265,7 +309,7 @@ public class ClienteCrud {
                         planoTreino.setCliente(cliente);
                         entityManager.merge(cliente);
                         entityManager.merge(planoTreino);
-                        System.out.println("Plano de treino atualizado com sucesso!");
+                        System.out.println("Relaciomento de plano de treino adicionado com sucesso!");
                     } else {
                         System.out.println("Plano de treino com os parâmetros fornecidos não encontrado.");
                     }
@@ -274,65 +318,133 @@ public class ClienteCrud {
                 System.out.print("Deseja atualizar o personal trainer do cliente? (s/n): ");
                 String respostaPersonal = scanner.nextLine();
                 if (respostaPersonal.equalsIgnoreCase("s")) {
-                    System.out.print("Digite o nome do novo personal trainer: ");
+                    PersonalTrainer personalTrainer = cliente.getPersonalTrainer();
+                    if (personalTrainer != null) {
+                        System.out.print("Nome atual: " + personalTrainer.getNome()
+                                + ". Novo nome (ou pressione Enter para manter): ");
+                        String nome1 = scanner.nextLine();
+                        if (!nome1.isEmpty()) {
+                            personalTrainer.setNome(nome1);
+                        }
+
+                        System.out.print("Especialidade atual: " + personalTrainer.getEspecialidade()
+                                + ". Nova especialidade (ou pressione Enter para manter): ");
+                        String especialidade = scanner.nextLine();
+                        if (!especialidade.isEmpty()) {
+                            personalTrainer.setEspecialidade(especialidade);
+                        }
+
+                        System.out.print("Telefone atual: " + personalTrainer.getTelefone()
+                                + ". Novo telefone (ou pressione Enter para manter): ");
+                        String telefone1 = scanner.nextLine();
+                        if (!telefone1.isEmpty()) {
+                            personalTrainer.setTelefone(telefone1);
+                        }
+                        entityManager.merge(personalTrainer);
+                        System.out.println("Personal trainer atualizado com sucesso!");
+                    } else {
+                        System.out.println("Este cliente não possui um personal trainer associado.");
+                    }
+                }
+
+                System.out.print("Deseja adicionar um novo relacionamento de personal trainer ao cliente? (s/n): ");
+                String respostaPersonal1 = scanner.nextLine();
+                if (respostaPersonal1.equalsIgnoreCase("s")) {
+                    System.out.print("Digite o nome do personal trainer que deseja adicionar: ");
                     String nomePersonal = scanner.nextLine();
 
-                    System.out.print("Digite a especialidade do novo personal trainer: ");
+                    System.out.print("Digite a especialidade do personal trainer: ");
                     String especialidade = scanner.nextLine();
 
-                    System.out.print("Digite o telefone do novo personal trainer: ");
+                    System.out.print("Digite o telefone do personal trainer: ");
                     String telefonePersonal = scanner.nextLine();
 
-                    PersonalTrainer personalTrainer = findPersonalByDetails(entityManager, nomePersonal, especialidade,
-                            telefonePersonal);
+                    PersonalTrainer personalTrainer = findPersonalByDetails(entityManager, nomePersonal, especialidade, telefonePersonal);
                     if (personalTrainer != null) {
                         cliente.setPersonalTrainer(personalTrainer);
                         personalTrainer.getClientes().add(cliente);
+                        entityManager.merge(cliente);
                         entityManager.merge(personalTrainer);
-                        System.out.println("Personal trainer atualizado com sucesso!");
+                        System.out.println("Relaciomento de personal trainer adicionado com sucesso!");
                     } else {
                         System.out.println("Personal trainer com os parâmetros fornecidos não encontrado.");
                     }
                 }
 
+
                 System.out.print("Deseja atualizar as reservas do cliente? (s/n): ");
                 String respostaReserva = scanner.nextLine();
-
                 if (respostaReserva.equalsIgnoreCase("s")) {
                     List<Reserva> reservasCliente = cliente.getReservas();
-                    String continuar;
-                    do {
-                        System.out.print("Digite a data da reserva (dd/MM/yyyy): ");
-                        String dataReservaStr = scanner.nextLine();
-                        System.out.print("Digite a hora da reserva (HH:mm): ");
-                        String horaReservaStr = scanner.nextLine();
-                        Date dataReserva = null;
-                        Date horaReserva = null;
 
-                        try {
-                            java.text.SimpleDateFormat sdfData = new java.text.SimpleDateFormat("dd/MM/yyyy");
-                            java.text.SimpleDateFormat sdfHora = new java.text.SimpleDateFormat("HH:mm");
-                            dataReserva = sdfData.parse(dataReservaStr);
-                            horaReserva = sdfHora.parse(horaReservaStr);
-                        } catch (java.text.ParseException e) {
-                            System.out.println("Erro ao converter data ou hora da reserva.");
-                        }
+                    if (reservasCliente.isEmpty()) {
+                        System.out.println("Este cliente não possui reservas associadas.");
+                    } else {
+                        for (Reserva reserva : reservasCliente) {
+                            System.out.print("Data atual: " + new java.text.SimpleDateFormat("dd/MM/yyyy").format(reserva.getDataReserva())
+                                    + ". Nova data (ou pressione Enter para manter): ");
+                            String dataReservaStr = scanner.nextLine();
+                            if (!dataReservaStr.isEmpty()) {
+                                try {
+                                    Date novaData = new java.text.SimpleDateFormat("dd/MM/yyyy").parse(dataReservaStr);
+                                    reserva.setDataReserva(novaData);
+                                } catch (java.text.ParseException e) {
+                                    System.out.println("Erro ao converter a data.");
+                                }
+                            }
 
-                        Reserva reserva = findReservaByDataHora(entityManager, dataReserva, horaReserva);
-                        if (reserva != null) {
-                            reserva.setCliente(cliente);
-                            reservasCliente.add(reserva);
+                            System.out.print("Hora atual: " + new java.text.SimpleDateFormat("HH:mm").format(reserva.getHoraReserva())
+                                    + ". Nova hora (ou pressione Enter para manter): ");
+                            String horaReservaStr = scanner.nextLine();
+                            if (!horaReservaStr.isEmpty()) {
+                                try {
+                                    Date novaHora = new java.text.SimpleDateFormat("HH:mm").parse(horaReservaStr);
+                                    reserva.setHoraReserva(novaHora);
+                                } catch (java.text.ParseException e) {
+                                    System.out.println("Erro ao converter a hora.");
+                                }
+                            }
+
                             entityManager.merge(reserva);
                             System.out.println("Reserva atualizada com sucesso!");
-                        } else {
-                            System.out.println("Reserva com a data e hora fornecidas não encontrada.");
                         }
+                    }
+                }
 
-                        System.out.print("Deseja atualizar outra reserva? (s/n): ");
-                        continuar = scanner.nextLine();
-                    } while (continuar.equalsIgnoreCase("s"));
+                System.out.print("Deseja adicionar um novo relacionamento de reserva ao cliente? (s/n): ");
+                String respostaReserva1 = scanner.nextLine();
+                while (respostaReserva1.equalsIgnoreCase("s")) {
+                    System.out.print("Digite a data da reserva (dd/MM/yyyy): ");
+                    String dataReservaStr = scanner.nextLine();
 
-                    cliente.setReservas(reservasCliente);
+                    System.out.print("Digite a hora da reserva (HH:mm): ");
+                    String horaReservaStr = scanner.nextLine();
+
+                    Date dataReserva = null;
+                    Date horaReserva = null;
+                    try {
+                        java.text.SimpleDateFormat sdfData = new java.text.SimpleDateFormat("dd/MM/yyyy");
+                        java.text.SimpleDateFormat sdfHora = new java.text.SimpleDateFormat("HH:mm");
+                        dataReserva = sdfData.parse(dataReservaStr);
+                        horaReserva = sdfHora.parse(horaReservaStr);
+                    } catch (java.text.ParseException e) {
+                        System.out.println("Erro ao converter data ou hora da reserva.");
+                    }
+
+                    Reserva reserva = findReservaByDataHora(entityManager, dataReserva, horaReserva);
+                    if (reserva != null) {
+                        cliente.getReservas().add(reserva);
+                        reserva.setCliente(cliente);
+                        entityManager.merge(cliente);
+                        entityManager.merge(reserva);
+
+                        System.out.println("Relacionamento de reserva adicionado com sucesso!");
+                    } else {
+                        System.out.println("Reserva com os parâmetros fornecidos não encontrada.");
+                    }
+
+                    System.out.print("Deseja adicionar outra reserva? (s/n): ");
+                    respostaReserva1 = scanner.nextLine();
                 }
 
                 transaction.commit();
