@@ -1,40 +1,32 @@
 package RA3Design.model;
 
+import RA3Design.model.Cliente;
+import RA3Design.model.PlanoTreino;
 import jakarta.persistence.*;
+
 import java.util.List;
 
 @Entity
 public class PersonalTrainer {
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private int id;
+    private Long id;
 
     private String nome;
     private String especialidade;
     private String telefone;
 
     @OneToMany(mappedBy = "personalTrainer")
-    private List<Cliente> clientes;
+    private List<PlanoTreino> planosTreino;
 
     @OneToMany(mappedBy = "personalTrainer")
-    private List<PlanoTreino> planoTreinos;
+    private List<Cliente> clientes;
 
-    public PersonalTrainer(String nome, String especialidade, String telefone, List<Cliente> clientes, List<PlanoTreino> planoTreinos) {
-        this.nome = nome;
-        this.especialidade = especialidade;
-        this.telefone = telefone;
-        this.clientes = clientes;
-        this.planoTreinos = planoTreinos;
-    }
-
-    public PersonalTrainer() {}
-
-    public int getId() {
+    public Long getId() {
         return id;
     }
 
-    public void setId(int id) {
+    public void setId(Long id) {
         this.id = id;
     }
 
@@ -60,6 +52,14 @@ public class PersonalTrainer {
 
     public void setTelefone(String telefone) {
         this.telefone = telefone;
+    }
+
+    public List<PlanoTreino> getPlanosTreino() {
+        return planosTreino;
+    }
+
+    public void setPlanoTreino(List<PlanoTreino> planosTreino) {
+        this.planosTreino = planosTreino;
     }
 
     public List<Cliente> getClientes() {
