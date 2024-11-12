@@ -6,14 +6,14 @@ import java.util.List;
 
 @Entity
 public class Equipamento {
+    private String nome;
+    private String categoria;
+    private Boolean disponibilidade;
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
-
-    private String nome;
-    private String descricao;
-    private int quantidade;
+   
 
     @OneToMany(mappedBy = "equipamento")
     private List<Reserva> reservas;
