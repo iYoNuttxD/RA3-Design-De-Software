@@ -1,7 +1,6 @@
 package RA3Design.model;
 
 import jakarta.persistence.*;
-
 import java.util.Date;
 
 @Entity
@@ -13,17 +12,30 @@ public class PlanoTreino {
 
     private String descricao;
 
-    @Temporal(TemporalType.DATE)
     private Date dataInicio;
 
-    @Temporal(TemporalType.DATE)
     private Date dataFim;
 
     @ManyToOne
+    @JoinColumn(name = "cliente_id")
     private Cliente cliente;
 
     @ManyToOne
+    @JoinColumn(name = "personal_trainer_id")
     private PersonalTrainer personalTrainer;
+
+    public PlanoTreino() {
+    }
+
+    public PlanoTreino(String descricao, Date dataInicio, Date dataFim, Cliente cliente, PersonalTrainer personalTrainer) {
+        this.descricao = descricao;
+        this.dataInicio = dataInicio;
+        this.dataFim = dataFim;
+        this.cliente = cliente;
+        this.personalTrainer = personalTrainer;
+    }
+
+    // Getters e Setters
 
     public int getId() {
         return id;
