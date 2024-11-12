@@ -4,7 +4,6 @@ import RA3Design.model.Cliente;
 import RA3Design.model.PersonalTrainer;
 import RA3Design.model.PlanoTreino;
 import jakarta.persistence.*;
-import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 import java.util.Scanner;
@@ -26,47 +25,52 @@ public class PlanoTreinoCrud {
             System.out.print("Digite a descrição do plano de treino: ");
             planoTreino.setDescricao(scanner.nextLine());
 
-            Date dataInicio = null;
-            while (dataInicio == null) {
+            String dataInicio = null;
+            Date dateInicio = null;
+            while (dateInicio == null) {
                 System.out.print("Digite a data de início do plano de treino (dd/MM/yyyy): ");
-                String dataInicioStr = scanner.nextLine();
-                try {
-                    dataInicio = new SimpleDateFormat("dd/MM/yyyy").parse(dataInicioStr);
-                } catch (java.text.ParseException e) {
-                    System.out.println("Erro ao converter a data de início.");
+                dataInicio = scanner.nextLine();
+                dateInicio = parseDate(dataInicio);
+                if (dateInicio == null) {
+                    System.out.println("Erro ao converter a data de início. Formato esperado: dd/MM/yyyy.");
                 }
             }
-            planoTreino.setDataInicio(dataInicio);
+            planoTreino.setDataInicio(dateInicio);
 
-            Date dataFim = null;
-            while (dataFim == null) {
+            String dataFim;
+            Date dateFim = null;
+            while (dateFim == null) {
                 System.out.print("Digite a data de fim do plano de treino (dd/MM/yyyy): ");
-                String dataFimStr = scanner.nextLine();
-                try {
-                    dataFim = new SimpleDateFormat("dd/MM/yyyy").parse(dataFimStr);
-                } catch (java.text.ParseException e) {
-                    System.out.println("Erro ao converter a data de fim.");
+                dataFim = scanner.nextLine();
+                dateFim = parseDate(dataFim);
+                if (dateFim == null) {
+                    System.out.println("Erro ao converter a data de fim. Formato esperado: dd/MM/yyyy.");
                 }
             }
-            planoTreino.setDataFim(dataFim);
+            planoTreino.setDataFim(dateFim);
 
             entityManager.persist(planoTreino);
             entityManager.flush();
 
-            System.out.print("Deseja associar um personal trainer ao plano de treino? (s/n): ");
-            String respostaPersonalTrainer = scanner.nextLine();
-            if (respostaPersonalTrainer.equalsIgnoreCase("s")) {
-                System.out.print("Digite o nome do personal trainer: ");
-                String nomePersonalTrainer = scanner.nextLine();
-
-                PersonalTrainer personalTrainer = findPersonalByNome(entityManager, nomePersonalTrainer);
-
+            if (confirmAction("Deseja associar um personal trainer ao plano de treino? (s/n): ")) {
+                PersonalTrainer personalTrainer = getPersonalTrainerDetails(scanner, entityManager);
                 if (personalTrainer != null) {
                     planoTreino.setPersonalTrainer(personalTrainer);
                     entityManager.merge(planoTreino);
                     System.out.println("Personal trainer associado com sucesso.");
                 } else {
                     System.out.println("Personal trainer não encontrado.");
+                }
+            }
+
+            if (confirmAction("Deseja associar um cliente ao plano de treino? (s/n): ")) {
+                Cliente cliente = getClienteDetails(scanner, entityManager);
+                if (cliente != null) {
+                    cliente.setPlanoTreino(planoTreino);
+                    entityManager.merge(cliente);
+                    System.out.println("Cliente associado ao plano de treino com sucesso.");
+                } else {
+                    System.out.println("Cliente não encontrado.");
                 }
             }
 
@@ -89,6 +93,61 @@ public class PlanoTreinoCrud {
         }
     }
 
+    private static boolean confirmAction(String message) {
+        Scanner scanner = new Scanner(System.in);
+        System.out.print(message);
+        String resposta = scanner.nextLine();
+        return resposta.equalsIgnoreCase("s");
+    }
+
+    private static PersonalTrainer getPersonalTrainerDetails(Scanner scanner, EntityManager entityManager) {
+        System.out.print("Digite o nome do personal trainer: ");
+        String nomePersonalTrainer = scanner.nextLine();
+        System.out.print("Digite a especialidade do personal trainer: ");
+        String especialidadePersonalTrainer = scanner.nextLine();
+        System.out.print("Digite o telefone do personal trainer: ");
+        String telefonePersonalTrainer = scanner.nextLine();
+
+        return findPersonalByDetails(entityManager, nomePersonalTrainer, especialidadePersonalTrainer, telefonePersonalTrainer);
+    }
+
+    private static Cliente getClienteDetails(Scanner scanner, EntityManager entityManager) {
+        System.out.print("Digite o nome do cliente: ");
+        String nomeCliente = scanner.nextLine();
+        System.out.print("Digite o telefone do cliente: ");
+        String telefoneCliente = scanner.nextLine();
+
+        return findClienteByDetails(entityManager, nomeCliente, telefoneCliente);
+    }
+
+
+    public static Cliente findClienteByDetails(EntityManager entityManager, String nome, String telefone) {
+        try {
+            return entityManager.createQuery(
+                            "SELECT c FROM Cliente c WHERE c.nome = :nome AND c.telefone = :telefone", Cliente.class)
+                    .setParameter("nome", nome)
+                    .setParameter("telefone", telefone)
+                    .getSingleResult();
+        } catch (NoResultException e) {
+            System.out.println("Nenhum cliente encontrado com as informações fornecidas.");
+            return null;
+        }
+    }
+
+
+    public static PersonalTrainer findPersonalByDetails(EntityManager entityManager, String nome, String especialidade, String telefone) {
+        try {
+            return entityManager.createQuery(
+                            "SELECT p FROM PersonalTrainer p WHERE p.nome = :nome AND p.especialidade = :especialidade AND p.telefone = :telefone", PersonalTrainer.class)
+                    .setParameter("nome", nome)
+                    .setParameter("especialidade", especialidade)
+                    .setParameter("telefone", telefone)
+                    .getSingleResult();
+        } catch (NoResultException e) {
+            System.out.println("Nenhum personal trainer encontrado com as informações fornecidas.");
+            return null;
+        }
+    }
 
     public static void updatePlanoTreino() {
         Scanner scanner = new Scanner(System.in);
@@ -101,32 +160,10 @@ public class PlanoTreinoCrud {
             transaction = entityManager.getTransaction();
             transaction.begin();
 
-            System.out.print("Digite a descrição ou ID do plano de treino a ser atualizado: ");
-            String descricaoOuIdPlano = scanner.nextLine();
+            System.out.print("Digite a descrição do plano de treino a ser atualizado: ");
+            String descricaoPlano = scanner.nextLine();
 
-            System.out.print("Digite a data de início do plano de treino (dd/MM/yyyy): ");
-            String dataInicioStr = scanner.nextLine();
-            Date dataInicio = null;
-            if (!dataInicioStr.isEmpty()) {
-                try {
-                    dataInicio = new java.text.SimpleDateFormat("dd/MM/yyyy").parse(dataInicioStr);
-                } catch (java.text.ParseException e) {
-                    System.out.println("Erro ao converter a data de início. Por favor, use o formato dd/MM/yyyy.");
-                }
-            }
-
-            System.out.print("Digite a data de fim do plano de treino (dd/MM/yyyy): ");
-            String dataFimStr = scanner.nextLine();
-            Date dataFim = null;
-            if (!dataFimStr.isEmpty()) {
-                try {
-                    dataFim = new java.text.SimpleDateFormat("dd/MM/yyyy").parse(dataFimStr);
-                } catch (java.text.ParseException e) {
-                    System.out.println("Erro ao converter a data de fim. Por favor, use o formato dd/MM/yyyy.");
-                }
-            }
-
-            PlanoTreino planoTreino = findPlanoByIdOuDescricao(entityManager, descricaoOuIdPlano, dataInicio, dataFim);
+            PlanoTreino planoTreino = findPlanoByDescricao(entityManager, descricaoPlano);
 
             if (planoTreino != null) {
                 System.out.println("Plano de treino encontrado. Atualize as informações ou pressione Enter para manter o valor atual.");
@@ -137,59 +174,90 @@ public class PlanoTreinoCrud {
                     planoTreino.setDescricao(descricao);
                 }
 
-                System.out.print("Data de início atual: " + new java.text.SimpleDateFormat("dd/MM/yyyy").format(planoTreino.getDataInicio())
+                System.out.print("Data de início atual: " + formatDate(planoTreino.getDataInicio())
                         + ". Nova data de início (dd/MM/yyyy) (ou pressione Enter para manter): ");
                 String novaDataInicioStr = scanner.nextLine();
                 if (!novaDataInicioStr.isEmpty()) {
-                    try {
-                        Date novaDataInicio = new java.text.SimpleDateFormat("dd/MM/yyyy").parse(novaDataInicioStr);
+                    Date novaDataInicio = parseDate(novaDataInicioStr);
+                    if (novaDataInicio != null) {
                         planoTreino.setDataInicio(novaDataInicio);
-                    } catch (java.text.ParseException e) {
-                        System.out.println("Erro ao converter a nova data de início. Por favor, use o formato dd/MM/yyyy.");
+                    } else {
+                        System.out.println("Formato de data inválido.");
                     }
                 }
 
-                System.out.print("Data de fim atual: " + new java.text.SimpleDateFormat("dd/MM/yyyy").format(planoTreino.getDataFim())
+                System.out.print("Data de fim atual: " + formatDate(planoTreino.getDataFim())
                         + ". Nova data de fim (dd/MM/yyyy) (ou pressione Enter para manter): ");
                 String novaDataFimStr = scanner.nextLine();
                 if (!novaDataFimStr.isEmpty()) {
-                    try {
-                        Date novaDataFim = new java.text.SimpleDateFormat("dd/MM/yyyy").parse(novaDataFimStr);
+                    Date novaDataFim = parseDate(novaDataFimStr);
+                    if (novaDataFim != null) {
                         planoTreino.setDataFim(novaDataFim);
-                    } catch (java.text.ParseException e) {
-                        System.out.println("Erro ao converter a nova data de fim. Por favor, use o formato dd/MM/yyyy.");
+                    } else {
+                        System.out.println("Formato de data inválido.");
                     }
                 }
 
-                System.out.print("Deseja atualizar o personal trainer associado ao plano de treino? (s/n): ");
-                String respostaPersonalTrainer = scanner.nextLine();
-                if (respostaPersonalTrainer.equalsIgnoreCase("s")) {
+                if (planoTreino.getPersonalTrainer() != null) {
+                    PersonalTrainer personalTrainerAtual = planoTreino.getPersonalTrainer();
+                    System.out.println("Personal Trainer atual: ");
+                    System.out.println("Nome: " + personalTrainerAtual.getNome());
+                    System.out.println("Especialidade: " + personalTrainerAtual.getEspecialidade());
+                    System.out.println("Telefone: " + personalTrainerAtual.getTelefone());
+                } else {
+                    System.out.println("Nenhum Personal Trainer vinculado atualmente.");
+                }
+
+                System.out.print("Deseja (1) vincular um novo personal trainer, (2) desassociar o personal trainer atual, ou (3) manter o atual? Digite 1, 2 ou 3: ");
+                String opcaoPersonalTrainer = scanner.nextLine();
+
+                if (opcaoPersonalTrainer.equals("1")) {
                     System.out.print("Digite o nome do personal trainer: ");
                     String nomePersonalTrainer = scanner.nextLine();
+                    System.out.print("Digite a especialidade do personal trainer: ");
+                    String especialidadePersonalTrainer = scanner.nextLine();
+                    System.out.print("Digite o telefone do personal trainer: ");
+                    String telefonePersonalTrainer = scanner.nextLine();
 
-                    PersonalTrainer personalTrainer = findPersonalByNome(entityManager, nomePersonalTrainer);
+                    PersonalTrainer personalTrainer = findPersonalByNomeEspecialidadeTelefone(
+                            entityManager, nomePersonalTrainer, especialidadePersonalTrainer, telefonePersonalTrainer);
 
                     if (personalTrainer != null) {
                         planoTreino.setPersonalTrainer(personalTrainer);
-                        System.out.println("Personal trainer associado com sucesso.");
+                        System.out.println("Personal trainer vinculado com sucesso.");
                     } else {
-                        System.out.println("Personal trainer não encontrado, mantendo o associado atual.");
+                        System.out.println("Personal trainer não encontrado.");
                     }
+                } else if (opcaoPersonalTrainer.equals("2")) {
+                    planoTreino.setPersonalTrainer(null);
+                    System.out.println("Personal trainer desassociado do plano de treino.");
                 }
 
-                System.out.print("Deseja atualizar o cliente associado ao plano de treino? (s/n): ");
-                String respostaCliente = scanner.nextLine();
-                if (respostaCliente.equalsIgnoreCase("s")) {
+                if (planoTreino.getCliente() != null) {
+                    Cliente clienteAtual = planoTreino.getCliente();
+                    System.out.println("Cliente atual associado ao plano de treino: ");
+                    System.out.println("Nome: " + clienteAtual.getNome());
+                } else {
+                    System.out.println("Nenhum cliente vinculado atualmente.");
+                }
+
+                System.out.print("Deseja (1) vincular um novo cliente, (2) desassociar o cliente atual, ou (3) manter o atual? Digite 1, 2 ou 3: ");
+                String opcaoCliente = scanner.nextLine();
+
+                if (opcaoCliente.equals("1")) {
                     System.out.print("Digite o nome do cliente: ");
                     String nomeCliente = scanner.nextLine();
 
                     Cliente cliente = findClienteByNome(entityManager, nomeCliente);
                     if (cliente != null) {
                         planoTreino.setCliente(cliente);
-                        System.out.println("Cliente associado com sucesso.");
+                        System.out.println("Cliente vinculado com sucesso.");
                     } else {
                         System.out.println("Cliente não encontrado.");
                     }
+                } else if (opcaoCliente.equals("2")) {
+                    planoTreino.setCliente(null);
+                    System.out.println("Cliente desassociado do plano de treino.");
                 }
 
                 entityManager.merge(planoTreino);
@@ -215,12 +283,30 @@ public class PlanoTreinoCrud {
             }
         }
     }
-    public static PersonalTrainer findPersonalByNome(EntityManager entityManager, String nome) {
+
+
+    private static String formatDate(Date date) {
+        return new java.text.SimpleDateFormat("dd/MM/yyyy").format(date);
+    }
+
+    private static Date parseDate(String dateStr) {
         try {
-            return entityManager.createQuery("SELECT p FROM PersonalTrainer p WHERE p.nome = :nome", PersonalTrainer.class)
+            return new java.text.SimpleDateFormat("dd/MM/yyyy").parse(dateStr);
+        } catch (java.text.ParseException e) {
+            return null;
+        }
+    }
+
+    public static PersonalTrainer findPersonalByNomeEspecialidadeTelefone(EntityManager entityManager, String nome, String especialidade, String telefone) {
+        try {
+            return entityManager.createQuery(
+                            "SELECT p FROM PersonalTrainer p WHERE p.nome = :nome AND p.especialidade = :especialidade AND p.telefone = :telefone", PersonalTrainer.class)
                     .setParameter("nome", nome)
+                    .setParameter("especialidade", especialidade)
+                    .setParameter("telefone", telefone)
                     .getSingleResult();
         } catch (NoResultException e) {
+            System.out.println("Nenhum personal trainer encontrado com os dados fornecidos.");
             return null;
         }
     }
@@ -236,38 +322,42 @@ public class PlanoTreinoCrud {
             transaction = entityManager.getTransaction();
             transaction.begin();
 
-            System.out.print("Digite a descrição ou o ID do plano de treino a ser deletado: ");
-            String descricaoOuIdPlano = scanner.nextLine();
+            System.out.print("Digite a descrição do plano de treino a ser deletado: ");
+            String descricaoPlano = scanner.nextLine();
 
-            System.out.print("Digite a data de início do plano de treino (dd/MM/yyyy): ");
-            String dataInicioStr = scanner.nextLine();
             Date dataInicio = null;
-            if (!dataInicioStr.isEmpty()) {
+            Date dataFim = null;
+
+            System.out.print("Digite a data de início do plano de treino (dd/MM/yyyy) ou deixe em branco: ");
+            String dataInicioStr = scanner.nextLine();
+            if (!dataInicioStr.trim().isEmpty()) {
                 try {
                     dataInicio = new java.text.SimpleDateFormat("dd/MM/yyyy").parse(dataInicioStr);
                 } catch (java.text.ParseException e) {
                     System.out.println("Erro ao converter a data de início. Por favor, use o formato dd/MM/yyyy.");
+                    return;
                 }
             }
 
-            System.out.print("Digite a data de fim do plano de treino (dd/MM/yyyy): ");
+            System.out.print("Digite a data de fim do plano de treino (dd/MM/yyyy) ou deixe em branco: ");
             String dataFimStr = scanner.nextLine();
-            Date dataFim = null;
-            if (!dataFimStr.isEmpty()) {
+            if (!dataFimStr.trim().isEmpty()) {
                 try {
                     dataFim = new java.text.SimpleDateFormat("dd/MM/yyyy").parse(dataFimStr);
                 } catch (java.text.ParseException e) {
                     System.out.println("Erro ao converter a data de fim. Por favor, use o formato dd/MM/yyyy.");
+                    return;
                 }
             }
 
-            PlanoTreino planoTreino = findPlanoByIdOuDescricao(entityManager, descricaoOuIdPlano, dataInicio, dataFim);
+            PlanoTreino planoTreino = findPlanoByDescricaoEData(entityManager, descricaoPlano, dataInicio, dataFim);
 
             if (planoTreino != null) {
-                long countClientesComPlano = countClientesComPlano(entityManager, planoTreino);
-                long countPersonalTrainersComPlano = countPersonalTrainersComPlano(entityManager, planoTreino);
+                boolean planoComCliente = planoTreino.getCliente() != null;
 
-                if (countClientesComPlano > 0 || countPersonalTrainersComPlano > 0) {
+                boolean planoComPersonalTrainer = planoTreino.getPersonalTrainer() != null;
+
+                if (planoComCliente || planoComPersonalTrainer) {
                     System.out.println("O plano de treino não pode ser deletado porque está associado a um ou mais clientes ou personal trainers.");
                     transaction.rollback();
                 } else {
@@ -287,7 +377,7 @@ public class PlanoTreinoCrud {
                     nestedException.printStackTrace();
                 }
             }
-            throw exception;
+            exception.printStackTrace();
         } finally {
             if (entityManager != null) {
                 entityManager.close();
@@ -295,31 +385,19 @@ public class PlanoTreinoCrud {
         }
     }
 
-    public static PlanoTreino findPlanoByIdOuDescricao(EntityManager entityManager, String descricaoOuIdPlano, Date dataInicio, Date dataFim) {
-        StringBuilder jpql = new StringBuilder("SELECT p FROM PlanoTreino p WHERE (p.descricao = :descricaoOuIdPlano OR p.nome = :descricaoOuIdPlano)");
 
-        Long idPlano = null;
-        try {
-            idPlano = Long.parseLong(descricaoOuIdPlano);
-            jpql = new StringBuilder("SELECT p FROM PlanoTreino p WHERE p.id = :idPlano");
-        } catch (NumberFormatException e) {
-        }
 
+    public static PlanoTreino findPlanoByDescricaoEData(EntityManager entityManager, String descricaoPlano, Date dataInicio, Date dataFim) {
+        String jpql = "SELECT p FROM PlanoTreino p WHERE p.descricao = :descricao";
         if (dataInicio != null) {
-            jpql.append(" AND p.dataInicio >= :dataInicio");
+            jpql += " AND p.dataInicio >= :dataInicio";
         }
         if (dataFim != null) {
-            jpql.append(" AND p.dataFim <= :dataFim");
+            jpql += " AND p.dataFim <= :dataFim";
         }
 
-        TypedQuery<PlanoTreino> query = entityManager.createQuery(jpql.toString(), PlanoTreino.class);
-
-        if (idPlano != null) {
-            query.setParameter("idPlano", idPlano);
-        } else {
-            query.setParameter("descricaoOuIdPlano", descricaoOuIdPlano);
-        }
-
+        TypedQuery<PlanoTreino> query = entityManager.createQuery(jpql, PlanoTreino.class);
+        query.setParameter("descricao", descricaoPlano);
         if (dataInicio != null) {
             query.setParameter("dataInicio", dataInicio);
         }
@@ -327,23 +405,27 @@ public class PlanoTreinoCrud {
             query.setParameter("dataFim", dataFim);
         }
 
-        List<PlanoTreino> planos = query.getResultList();
-        return planos.isEmpty() ? null : planos.get(0);
+        try {
+            return query.getSingleResult();
+        } catch (NoResultException e) {
+            return null;
+        }
     }
 
 
 
-    private static long countClientesComPlano(EntityManager entityManager, PlanoTreino planoTreino) {
-        Query query = entityManager.createQuery("SELECT COUNT(c) FROM Cliente c WHERE c.planoTreino = :planoTreino");
-        query.setParameter("planoTreino", planoTreino);
-        return (long) query.getSingleResult();
+    public static PlanoTreino findPlanoByDescricao(EntityManager entityManager, String descricao) {
+        try {
+            return entityManager.createQuery(
+                            "SELECT p FROM PlanoTreino p WHERE p.descricao = :descricao", PlanoTreino.class)
+                    .setParameter("descricao", descricao)
+                    .getSingleResult();
+        } catch (NoResultException e) {
+            System.out.println("Nenhum plano de treino encontrado com a descrição fornecida.");
+            return null;
+        }
     }
 
-    private static long countPersonalTrainersComPlano(EntityManager entityManager, PlanoTreino planoTreino) {
-        Query query = entityManager.createQuery("SELECT COUNT(p) FROM PersonalTrainer p WHERE p.planoTreino = :planoTreino");
-        query.setParameter("planoTreino", planoTreino);
-        return (long) query.getSingleResult();
-    }
 
     public static void readPlanoTreino(EntityManager entityManager) {
         List<PlanoTreino> planosTreino = findAllPlanosTreino(entityManager);
@@ -366,10 +448,18 @@ public class PlanoTreinoCrud {
                     System.out.println("Personal Trainer: Não atribuído.");
                 }
 
+                if (planoTreino.getCliente() != null) {
+                    Cliente cliente = planoTreino.getCliente();
+                    System.out.println("Cliente: " + cliente.getNome());
+                } else {
+                    System.out.println("Cliente: Não atribuído.");
+                }
+
                 System.out.println("=======================================");
             }
         }
     }
+
 
     private static List<PlanoTreino> findAllPlanosTreino(EntityManager entityManager) {
         TypedQuery<PlanoTreino> query = entityManager.createQuery("SELECT p FROM PlanoTreino p", PlanoTreino.class);
@@ -389,4 +479,5 @@ public class PlanoTreinoCrud {
             return null;
         }
     }
+
 }
