@@ -1,7 +1,5 @@
 package RA3Design.model;
 
-import RA3Design.model.Cliente;
-import RA3Design.model.PersonalTrainer;
 import jakarta.persistence.*;
 
 import java.util.Date;
@@ -24,7 +22,17 @@ public class PlanoTreino {
     @JoinColumn(name = "personaltrainer_id")
     private PersonalTrainer personalTrainer;
 
-    // Getters e Setters
+    public PlanoTreino(Long id, String descricao, Date dataInicio, Date dataFim, Cliente cliente, PersonalTrainer personalTrainer) {
+        this.id = id;
+        this.descricao = descricao;
+        this.dataInicio = dataInicio;
+        this.dataFim = dataFim;
+        this.cliente = cliente;
+        this.personalTrainer = personalTrainer;
+    }
+
+    public PlanoTreino() {}
+
     public Long getId() {
         return id;
     }
