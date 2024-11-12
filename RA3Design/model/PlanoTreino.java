@@ -1,47 +1,35 @@
 package RA3Design.model;
 
+import RA3Design.model.Cliente;
+import RA3Design.model.PersonalTrainer;
 import jakarta.persistence.*;
+
 import java.util.Date;
 
 @Entity
 public class PlanoTreino {
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private int id;
+    private Long id;
 
     private String descricao;
-
     private Date dataInicio;
-
     private Date dataFim;
 
-    @ManyToOne
+    @OneToOne
     @JoinColumn(name = "cliente_id")
     private Cliente cliente;
 
     @ManyToOne
-    @JoinColumn(name = "personal_trainer_id")
+    @JoinColumn(name = "personaltrainer_id")
     private PersonalTrainer personalTrainer;
 
-    public PlanoTreino() {
-    }
-
-    public PlanoTreino(String descricao, Date dataInicio, Date dataFim, Cliente cliente, PersonalTrainer personalTrainer) {
-        this.descricao = descricao;
-        this.dataInicio = dataInicio;
-        this.dataFim = dataFim;
-        this.cliente = cliente;
-        this.personalTrainer = personalTrainer;
-    }
-
     // Getters e Setters
-
-    public int getId() {
+    public Long getId() {
         return id;
     }
 
-    public void setId(int id) {
+    public void setId(Long id) {
         this.id = id;
     }
 
