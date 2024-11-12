@@ -449,14 +449,19 @@ public class PersonalTrainerCrud {
             System.out.print("Digite a especialidade do personal trainer a ser excluído: ");
             String especialidadePersonal = scanner.nextLine();
 
-            System.out.print("Digite o telefone do novo personal trainer: ");
+            System.out.print("Digite o telefone do personal trainer a ser excluído: ");
             String telefonePersonal = scanner.nextLine();
 
-            PersonalTrainer personalTrainer = findPersonalByDetails(entityManager, nomePersonal, especialidadePersonal,
-                    telefonePersonal);
+            PersonalTrainer personalTrainer = findPersonalByDetails(entityManager, nomePersonal, especialidadePersonal, telefonePersonal);
 
             if (personalTrainer == null) {
                 System.out.println("Personal trainer não encontrado.");
+                return;
+            }
+
+            if ((personalTrainer.getPlanosTreino() != null && !personalTrainer.getPlanosTreino().isEmpty()) ||
+                    (personalTrainer.getClientes() != null && !personalTrainer.getClientes().isEmpty())) {
+                System.out.println("Não é possível excluir este personal trainer, pois ele possui planos de treino ou clientes associados.");
                 return;
             }
 
@@ -465,19 +470,6 @@ public class PersonalTrainerCrud {
             String confirmacao = scanner.nextLine();
 
             if (confirmacao.equalsIgnoreCase("s")) {
-                if (personalTrainer.getPlanosTreino() != null && !personalTrainer.getPlanosTreino().isEmpty()) {
-                    for (PlanoTreino plano : personalTrainer.getPlanosTreino()) {
-                        entityManager.remove(plano);
-                    }
-                }
-
-                if (personalTrainer.getClientes() != null && !personalTrainer.getClientes().isEmpty()) {
-                    for (Cliente cliente : personalTrainer.getClientes()) {
-                        cliente.setPersonalTrainer(null);
-                        entityManager.merge(cliente);
-                    }
-                }
-
                 entityManager.remove(entityManager.contains(personalTrainer) ? personalTrainer : entityManager.merge(personalTrainer));
                 transaction.commit();
                 System.out.println("Personal trainer excluído com sucesso!");
@@ -500,6 +492,7 @@ public class PersonalTrainerCrud {
             }
         }
     }
+
 
 
     public static void readPersonalTrainer() {
