@@ -3,6 +3,7 @@ package RA3Design;
 import RA3Design.crud.ClienteCrud;
 import RA3Design.crud.PersonalTrainerCrud;
 import RA3Design.crud.EquipamentoCrud;
+import RA3Design.crud.PlanoTreinoCrud;
 
 import java.util.Scanner;
 
@@ -12,11 +13,11 @@ public class Main {
         int opcao;
 
         do {
-            // Exibe o menu
             System.out.println("========= Menu =========");
             System.out.println("1 - CRUD de Cliente");
             System.out.println("2 - CRUD de Personal Trainer");
             System.out.println("3 - CRUD de Equipamento");
+            System.out.println("4 - CRUD de Plano de Treino");
             System.out.println("0 - Sair");
             System.out.print("Escolha uma opção: ");
             opcao = scanner.nextInt();
@@ -31,6 +32,9 @@ public class Main {
                     break;
                 case 3:
                     exibirMenuCrudEquipamento(scanner);
+                    break;
+                case 4:
+                    exibirMenuCrudPlanoTreino(scanner);
                     break;
                 case 0:
                     System.out.println("Saindo...");
@@ -47,7 +51,6 @@ public class Main {
         int opcaoCrudCliente;
 
         do {
-            // Menu específico para CRUD de Cliente
             System.out.println("========= CRUD Cliente =========");
             System.out.println("1 - Criar Cliente");
             System.out.println("2 - Ler Clientes");
@@ -150,5 +153,41 @@ public class Main {
                     System.out.println("Opção inválida. Tente novamente.");
             }
         } while (opcaoCrudEquipamento != 0);
+    }
+
+    private static void exibirMenuCrudPlanoTreino(Scanner scanner) {
+        int opcaoCrudPlanoTreino;
+
+        do {
+            System.out.println("========= CRUD Plano de Treino =========");
+            System.out.println("1 - Criar Plano de Treino");
+            System.out.println("2 - Ler Planos de Treino");
+            System.out.println("3 - Atualizar Plano de Treino");
+            System.out.println("4 - Excluir Plano de Treino");
+            System.out.println("0 - Voltar ao Menu Principal");
+            System.out.print("Escolha uma opção: ");
+            opcaoCrudPlanoTreino = scanner.nextInt();
+            scanner.nextLine();
+
+            switch (opcaoCrudPlanoTreino) {
+                case 1:
+                    PlanoTreinoCrud.createPlanoTreino();
+                    break;
+                case 2:
+                    PlanoTreinoCrud.readPlanoTreino();
+                    break;
+                case 3:
+                    PlanoTreinoCrud.updatePlanoTreino();
+                    break;
+                case 4:
+                    PlanoTreinoCrud.deletePlanoTreino();
+                    break;
+                case 0:
+                    System.out.println("Voltando ao menu principal...");
+                    break;
+                default:
+                    System.out.println("Opção inválida. Tente novamente.");
+            }
+        } while (opcaoCrudPlanoTreino != 0);
     }
 }
