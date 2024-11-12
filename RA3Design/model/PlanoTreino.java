@@ -19,7 +19,7 @@ public class PlanoTreino {
     private Cliente cliente;
 
     @ManyToOne
-    @JoinColumn(name = "personaltrainer_id")
+    @JoinColumn(name = "personal_trainer_id")
     private PersonalTrainer personalTrainer;
 
     public PlanoTreino(Long id, String descricao, Date dataInicio, Date dataFim, Cliente cliente, PersonalTrainer personalTrainer) {
