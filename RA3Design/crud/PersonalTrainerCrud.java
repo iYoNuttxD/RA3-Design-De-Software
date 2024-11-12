@@ -408,7 +408,6 @@ public class PersonalTrainerCrud {
 
 
                 entityManager.merge(personalTrainer);
-
                 transaction.commit();
                 System.out.println("Personal Trainer atualizado com sucesso!");
 

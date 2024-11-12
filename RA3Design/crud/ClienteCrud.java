@@ -167,6 +167,7 @@ public class ClienteCrud {
             }
 
             transaction.commit();
+            System.out.println("Cliente criado com sucesso!");
 
         } catch (RuntimeException exception) {
             if (transaction != null && transaction.isActive()) {
@@ -521,7 +522,7 @@ public class ClienteCrud {
                     respostaRemoverReserva = scanner.nextLine();
                 }
 
-
+                entityManager.merge(cliente);
                 transaction.commit();
                 System.out.println("Cliente atualizado com sucesso!");
 

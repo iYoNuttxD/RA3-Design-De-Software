@@ -275,6 +275,7 @@ public class EquipamentoCrud {
                     respostaRemoverReserva = scanner.nextLine();
                 }
 
+                entityManager.merge(equipamento);
                 transaction.commit();
                 System.out.println("Equipamento atualizado com sucesso!");
             } else {
