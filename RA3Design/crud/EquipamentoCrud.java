@@ -30,9 +30,20 @@ public class EquipamentoCrud {
             System.out.print("Digite a categoria do equipamento: ");
             equipamento.setCategoria(scanner.nextLine());
 
-            System.out.print("Digite a disponibilidade do equipamento (true/false): ");
-            equipamento.setDisponibilidade(scanner.nextBoolean());
-            scanner.nextLine();  // Limpa o buffer após o nextBoolean()
+            // Validação para aceitar apenas true ou false para disponibilidade
+            Boolean disponibilidade = null;
+            while (disponibilidade == null) {
+                System.out.print("Digite a disponibilidade do equipamento (true/false): ");
+                String disponibilidadeStr = scanner.nextLine();
+                if (disponibilidadeStr.equalsIgnoreCase("true")) {
+                    disponibilidade = true;
+                } else if (disponibilidadeStr.equalsIgnoreCase("false")) {
+                    disponibilidade = false;
+                } else {
+                    System.out.println("Por favor, digite 'true' ou 'false'.");
+                }
+            }
+            equipamento.setDisponibilidade(disponibilidade);
 
             entityManager.persist(equipamento);
             entityManager.flush();
@@ -43,38 +54,19 @@ public class EquipamentoCrud {
                 List<Reserva> reservasEquipamento = new ArrayList<>();
                 String continuar;
                 do {
-                    Date dataReserva = null;
-                    while (dataReserva == null) {
-                        System.out.print("Digite a data da reserva (dd/MM/yyyy): ");
-                        String dataReservaStr = scanner.nextLine();
-                        try {
-                            SimpleDateFormat sdfData = new SimpleDateFormat("dd/MM/yyyy");
-                            dataReserva = sdfData.parse(dataReservaStr);
-                        } catch (java.text.ParseException e) {
-                            System.out.println("Erro ao converter data da reserva.");
-                        }
+                    System.out.print("Digite o ID da reserva que deseja associar: ");
+                    Long idReserva = scanner.nextLong();
+                    scanner.nextLine();  // Limpa o buffer após o nextLong()
+
+                    // Realiza a pesquisa da reserva pelo ID
+                    Reserva reserva = findReservaById(entityManager, idReserva);
+                    if (reserva != null) {
+                        reserva.setEquipamento(equipamento);
+                        entityManager.merge(reserva);
+                        reservasEquipamento.add(reserva);
+                    } else {
+                        System.out.println("Reserva não encontrada.");
                     }
-
-                    Date horaReserva = null;
-                    while (horaReserva == null) {
-                        System.out.print("Digite a hora da reserva (HH:mm): ");
-                        String horaReservaStr = scanner.nextLine();
-                        try {
-                            SimpleDateFormat sdfHora = new SimpleDateFormat("HH:mm");
-                            horaReserva = sdfHora.parse(horaReservaStr);
-                        } catch (java.text.ParseException e) {
-                            System.out.println("Erro ao converter hora da reserva.");
-                        }
-                    }
-
-                    Reserva reserva = new Reserva();
-                    reserva.setEquipamento(equipamento);
-                    reserva.setDataReserva(dataReserva);
-                    reserva.setHoraReserva(horaReserva);
-
-                    // Persistindo a reserva associada ao equipamento
-                    entityManager.persist(reserva);
-                    reservasEquipamento.add(reserva);
 
                     System.out.print("Deseja associar outra reserva? (s/n): ");
                     continuar = scanner.nextLine();
@@ -113,10 +105,12 @@ public class EquipamentoCrud {
             transaction = entityManager.getTransaction();
             transaction.begin();
 
-            System.out.print("Digite o nome do equipamento a ser atualizado: ");
-            String nomeEquipamento = scanner.nextLine();
+            // Mudança para buscar equipamento por ID em vez de nome
+            System.out.print("Digite o ID do equipamento a ser atualizado: ");
+            Long idEquipamento = scanner.nextLong();
+            scanner.nextLine();  // Limpa o buffer
 
-            Equipamento equipamento = findEquipamentoByNome(entityManager, nomeEquipamento);
+            Equipamento equipamento = findEquipamentoById(entityManager, idEquipamento);
 
             if (equipamento != null) {
                 System.out.println("Equipamento encontrado. Atualize as informações ou pressione Enter para manter o valor atual.");
@@ -127,85 +121,44 @@ public class EquipamentoCrud {
                     equipamento.setNome(nome);
                 }
 
-                System.out.print("Marca atual: " + equipamento.getMarca() + ". Nova marca (ou pressione Enter para manter): ");
-                String marca = scanner.nextLine();
-                if (!marca.isEmpty()) {
-                    equipamento.setMarca(marca);
+                System.out.print("Categoria atual: " + equipamento.getCategoria() + ". Nova categoria (ou pressione Enter para manter): ");
+                String categoria = scanner.nextLine();
+                if (!categoria.isEmpty()) {
+                    equipamento.setCategoria(categoria);
                 }
 
-                System.out.print("Descrição atual: " + equipamento.getDescricao() + ". Nova descrição (ou pressione Enter para manter): ");
-                String descricao = scanner.nextLine();
-                if (!descricao.isEmpty()) {
-                    equipamento.setDescricao(descricao);
+                System.out.print("Disponibilidade atual: " + equipamento.getDisponibilidade() + ". Nova disponibilidade (true/false) (ou pressione Enter para manter): ");
+                String disponibilidadeStr = scanner.nextLine();
+                if (!disponibilidadeStr.isEmpty()) {
+                    Boolean novaDisponibilidade = Boolean.parseBoolean(disponibilidadeStr);
+                    equipamento.setDisponibilidade(novaDisponibilidade);
                 }
 
-                System.out.print("Data de aquisição atual: " + new SimpleDateFormat("dd/MM/yyyy").format(equipamento.getDataAquisicao())
-                        + ". Nova data de aquisição (dd/MM/yyyy) (ou pressione Enter para manter): ");
-                String dataAquisicaoStr = scanner.nextLine();
-                if (!dataAquisicaoStr.isEmpty()) {
-                    try {
-                        Date dataAquisicao = new SimpleDateFormat("dd/MM/yyyy").parse(dataAquisicaoStr);
-                        equipamento.setDataAquisicao(dataAquisicao);
-                    } catch (java.text.ParseException e) {
-                        System.out.println("Erro ao converter a data de aquisição. Formato esperado: dd/MM/yyyy");
-                    }
-                }
+                // Atualização de reservas associadas
+                System.out.print("Deseja atualizar as reservas associadas ao equipamento? (s/n): ");
+                String respostaReserva = scanner.nextLine();
+                if (respostaReserva.equalsIgnoreCase("s")) {
+                    List<Reserva> reservasEquipamento = new ArrayList<>();
+                    String continuar;
+                    do {
+                        System.out.print("Digite o ID da reserva que deseja associar: ");
+                        Long idReserva = scanner.nextLong();
+                        scanner.nextLine();  // Limpa o buffer
 
-                System.out.print("Deseja atualizar a manutenção do equipamento? (s/n): ");
-                String respostaManutencao = scanner.nextLine();
-                if (respostaManutencao.equalsIgnoreCase("s")) {
-                    Manutencao manutencao = equipamento.getManutencao();
-                    if (manutencao != null) {
-                        System.out.print("Descrição atual: " + manutencao.getDescricao() + ". Nova descrição (ou pressione Enter para manter): ");
-                        String descricaoManutencao = scanner.nextLine();
-                        if (!descricaoManutencao.isEmpty()) {
-                            manutencao.setDescricao(descricaoManutencao);
+                        Reserva reserva = findReservaById(entityManager, idReserva);
+                        if (reserva != null) {
+                            reserva.setEquipamento(equipamento);
+                            entityManager.merge(reserva);
+                            reservasEquipamento.add(reserva);
+                        } else {
+                            System.out.println("Reserva não encontrada.");
                         }
 
-                        System.out.print("Data de execução atual: " + new SimpleDateFormat("dd/MM/yyyy").format(manutencao.getDataExecucao())
-                                + ". Nova data de execução (dd/MM/yyyy) (ou pressione Enter para manter): ");
-                        String novaDataExecucaoStr = scanner.nextLine();
-                        if (!novaDataExecucaoStr.isEmpty()) {
-                            try {
-                                Date novaDataExecucao = new SimpleDateFormat("dd/MM/yyyy").parse(novaDataExecucaoStr);
-                                manutencao.setDataExecucao(novaDataExecucao);
-                            } catch (java.text.ParseException e) {
-                                System.out.println("Erro ao converter a nova data de execução.");
-                            }
-                        }
+                        System.out.print("Deseja associar outra reserva? (s/n): ");
+                        continuar = scanner.nextLine();
+                    } while (continuar.equalsIgnoreCase("s"));
 
-                        entityManager.merge(manutencao);
-                        System.out.println("Manutenção atualizada com sucesso!");
-                    } else {
-                        System.out.println("Este equipamento não possui manutenção associada.");
-                    }
-                }
-
-                System.out.print("Deseja adicionar uma nova manutenção ao equipamento? (s/n): ");
-                String respostaManutencao1 = scanner.nextLine();
-                if (respostaManutencao1.equalsIgnoreCase("s")) {
-                    System.out.print("Digite a descrição da manutenção que deseja adicionar: ");
-                    String descricaoManutencao = scanner.nextLine();
-
-                    System.out.print("Digite a data de execução da manutenção (dd/MM/yyyy): ");
-                    String dataExecucaoStr = scanner.nextLine();
-                    Date dataExecucao = null;
-                    try {
-                        dataExecucao = new SimpleDateFormat("dd/MM/yyyy").parse(dataExecucaoStr);
-                    } catch (java.text.ParseException e) {
-                        System.out.println("Erro ao converter a data de execução.");
-                    }
-
-                    Manutencao manutencao = findManutencaoByDescricaoData(entityManager, descricaoManutencao, dataExecucao);
-                    if (manutencao != null) {
-                        equipamento.setManutencao(manutencao);
-                        manutencao.setEquipamento(equipamento);
-                        entityManager.merge(equipamento);
-                        entityManager.merge(manutencao);
-                        System.out.println("Relacionamento de manutenção adicionado com sucesso!");
-                    } else {
-                        System.out.println("Manutenção com os parâmetros fornecidos não encontrada.");
-                    }
+                    equipamento.setReservas(reservasEquipamento);
                 }
 
                 transaction.commit();
@@ -242,10 +195,12 @@ public class EquipamentoCrud {
             transaction = entityManager.getTransaction();
             transaction.begin();
 
-            System.out.print("Digite o nome do equipamento a ser excluído: ");
-            String nomeEquipamento = scanner.nextLine();
+            // Mudança para buscar equipamento por ID em vez de nome
+            System.out.print("Digite o ID do equipamento a ser excluído: ");
+            Long idEquipamento = scanner.nextLong();
+            scanner.nextLine();  // Limpa o buffer
 
-            Equipamento equipamento = findEquipamentoByNome(entityManager, nomeEquipamento);
+            Equipamento equipamento = findEquipamentoById(entityManager, idEquipamento);
 
             if (equipamento == null) {
                 System.out.println("Equipamento não encontrado.");
@@ -301,8 +256,8 @@ public class EquipamentoCrud {
                 for (Equipamento equipamento : equipamentos) {
                     System.out.println("=======================================");
                     System.out.println("Nome: " + equipamento.getNome());
-                    System.out.println("Descrição: " + equipamento.getDescricao());
-                    System.out.println("Quantidade: " + equipamento.getQuantidade());
+                    System.out.println("Categoria: " + equipamento.getCategoria());
+                    System.out.println("Disponibilidade: " + equipamento.getDisponibilidade());
                     if (equipamento.getReservas() != null && !equipamento.getReservas().isEmpty()) {
                         System.out.println("Reservas: ");
                         for (Reserva reserva : equipamento.getReservas()) {
@@ -323,23 +278,19 @@ public class EquipamentoCrud {
         }
     }
 
-    private static List<Equipamento> findAllEquipamentos(EntityManager entityManager) {
-        TypedQuery<Equipamento> query = entityManager.createQuery("SELECT e FROM Equipamento e", Equipamento.class);
-        try {
-            return query.getResultList();
-        } catch (NoResultException e) {
-            return null;
-        }
+    // Método auxiliar para buscar Equipamento por ID
+    private static Equipamento findEquipamentoById(EntityManager entityManager, Long idEquipamento) {
+        return entityManager.find(Equipamento.class, idEquipamento);
     }
 
-    private static Equipamento findEquipamentoByNome(EntityManager entityManager, String nome) {
-        Query query = entityManager.createQuery("SELECT e FROM Equipamento e WHERE e.nome = :nome");
-        query.setParameter("nome", nome);
-        try {
-            return (Equipamento) query.getSingleResult();
-        } catch (NoResultException e) {
-            return null;
-        }
+    // Método auxiliar para buscar todas as reservas associadas a um equipamento
+    private static Reserva findReservaById(EntityManager entityManager, Long idReserva) {
+        return entityManager.find(Reserva.class, idReserva);
+    }
+
+    // Método auxiliar para listar todos os equipamentos
+    private static List<Equipamento> findAllEquipamentos(EntityManager entityManager) {
+        String jpql = "SELECT e FROM Equipamento e";
+        return entityManager.createQuery(jpql, Equipamento.class).getResultList();
     }
 }
-
