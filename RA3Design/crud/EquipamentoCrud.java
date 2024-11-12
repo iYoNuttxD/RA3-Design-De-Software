@@ -12,234 +12,253 @@ import java.util.Scanner;
 
 public class EquipamentoCrud {
     public static void createEquipamento() {
-        Scanner scanner = new Scanner(System.in);
-        EntityManager entityManager = null;
-        EntityTransaction transaction = null;
+    Scanner scanner = new Scanner(System.in);
+    EntityManager entityManager = null;
+    EntityTransaction transaction = null;
 
-        try {
-            EntityManagerFactory emFactory = Persistence.createEntityManagerFactory("academiaPU");
-            entityManager = emFactory.createEntityManager();
-            transaction = entityManager.getTransaction();
-            transaction.begin();
+    try {
+        EntityManagerFactory emFactory = Persistence.createEntityManagerFactory("academiaPU");
+        entityManager = emFactory.createEntityManager();
+        transaction = entityManager.getTransaction();
+        transaction.begin();
 
-            Equipamento equipamento = new Equipamento();
+        Equipamento equipamento = new Equipamento();
 
-            System.out.print("Digite o nome do equipamento: ");
-            equipamento.setNome(scanner.nextLine());
+        System.out.print("Digite o nome do equipamento: ");
+        equipamento.setNome(scanner.nextLine());
 
-            System.out.print("Digite a categoria do equipamento: ");
-            equipamento.setCategoria(scanner.nextLine());
+        System.out.print("Digite a categoria do equipamento: ");
+        equipamento.setCategoria(scanner.nextLine());
 
-            // Validação para aceitar apenas true ou false para disponibilidade
-            Boolean disponibilidade = null;
-            while (disponibilidade == null) {
-                System.out.print("Digite a disponibilidade do equipamento (true/false): ");
-                String disponibilidadeStr = scanner.nextLine();
-                if (disponibilidadeStr.equalsIgnoreCase("true")) {
-                    disponibilidade = true;
-                } else if (disponibilidadeStr.equalsIgnoreCase("false")) {
-                    disponibilidade = false;
-                } else {
-                    System.out.println("Por favor, digite 'true' ou 'false'.");
-                }
+        boolean disponibilidadeValida = false;
+        while (!disponibilidadeValida) {
+            System.out.print("Digite a disponibilidade do equipamento (true/false): ");
+            String disponibilidadeStr = scanner.nextLine();
+            if (disponibilidadeStr.equalsIgnoreCase("true") || disponibilidadeStr.equalsIgnoreCase("false")) {
+                equipamento.setDisponibilidade(Boolean.parseBoolean(disponibilidadeStr));
+                disponibilidadeValida = true;
+            } else {
+                System.out.println("Entrada inválida. Digite 'true' ou 'false'.");
             }
-            equipamento.setDisponibilidade(disponibilidade);
+        }
 
-            entityManager.persist(equipamento);
-            entityManager.flush();
+        entityManager.persist(equipamento);
+        entityManager.flush();
 
-            System.out.print("Deseja associar uma reserva ao equipamento? (s/n): ");
+        System.out.print("Deseja associar uma reserva ao equipamento? (s/n): ");
+        String respostaReserva = scanner.nextLine();
+        if (respostaReserva.equalsIgnoreCase("s")) {
+            Reserva reserva = buscarReservaPelosDados(scanner, entityManager);
+            if (reserva != null) {
+                reserva.setEquipamento(equipamento);
+                entityManager.merge(reserva);
+            }
+        }
+
+        transaction.commit();
+
+    } catch (RuntimeException exception) {
+        if (transaction != null && transaction.isActive()) {
+            transaction.rollback();
+        }
+        throw exception;
+    } finally {
+        if (entityManager != null) {
+            entityManager.close();
+        }
+    }
+}
+
+// Método auxiliar para buscar reserva existente pelos dados inseridos pelo usuário
+private static Reserva buscarReservaPelosDados(Scanner scanner, EntityManager entityManager) {
+    System.out.print("Digite a data da reserva (dd/MM/yyyy): ");
+    String dataReservaStr = scanner.nextLine();
+    System.out.print("Digite a hora da reserva (HH:mm): ");
+    String horaReservaStr = scanner.nextLine();
+
+    // Query para buscar a reserva
+    TypedQuery<Reserva> query = entityManager.createQuery(
+            "SELECT r FROM Reserva r WHERE r.dataReserva = :dataReserva AND r.horaReserva = :horaReserva",
+            Reserva.class
+    );
+    query.setParameter("dataReserva", parseDate(dataReservaStr));
+    query.setParameter("horaReserva", parseTime(horaReservaStr));
+
+    try {
+        return query.getSingleResult();
+    } catch (NoResultException e) {
+        System.out.println("Reserva não encontrada.");
+        return null;
+    }
+}
+
+
+   public static void updateEquipamento() {
+    Scanner scanner = new Scanner(System.in);
+    EntityManager entityManager = null;
+    EntityTransaction transaction = null;
+
+    try {
+        EntityManagerFactory emFactory = Persistence.createEntityManagerFactory("academiaPU");
+        entityManager = emFactory.createEntityManager();
+        transaction = entityManager.getTransaction();
+        transaction.begin();
+
+        System.out.print("Digite o nome do equipamento a ser atualizado: ");
+        String nomeEquipamento = scanner.nextLine();
+
+        Equipamento equipamento = findEquipamentoByNome(entityManager, nomeEquipamento);
+
+        if (equipamento != null) {
+            System.out.println("Equipamento encontrado. Atualize as informações ou pressione Enter para manter o valor atual.");
+
+            // Atualização das propriedades do equipamento
+            System.out.print("Nome atual: " + equipamento.getNome() + ". Novo nome (ou pressione Enter para manter): ");
+            String nome = scanner.nextLine();
+            if (!nome.isEmpty()) {
+                equipamento.setNome(nome);
+            }
+
+            System.out.print("Categoria atual: " + equipamento.getCategoria() + ". Nova categoria (ou pressione Enter para manter): ");
+            String categoria = scanner.nextLine();
+            if (!categoria.isEmpty()) {
+                equipamento.setCategoria(categoria);
+            }
+
+            System.out.print("Disponibilidade atual: " + equipamento.getDisponibilidade() + ". Nova disponibilidade (true/false) (ou pressione Enter para manter): ");
+            String disponibilidadeStr = scanner.nextLine();
+            if (!disponibilidadeStr.isEmpty()) {
+                equipamento.setDisponibilidade(Boolean.parseBoolean(disponibilidadeStr));
+            }
+
+            // Atualizando as reservas
+            System.out.print("Deseja atualizar as reservas do equipamento? (s/n): ");
             String respostaReserva = scanner.nextLine();
             if (respostaReserva.equalsIgnoreCase("s")) {
-                List<Reserva> reservasEquipamento = new ArrayList<>();
-                String continuar;
-                do {
-                    System.out.print("Digite o ID da reserva que deseja associar: ");
-                    Long idReserva = scanner.nextLong();
-                    scanner.nextLine();  // Limpa o buffer após o nextLong()
-
-                    // Realiza a pesquisa da reserva pelo ID
-                    Reserva reserva = findReservaById(entityManager, idReserva);
+                List<Reserva> reservasEquipamento = equipamento.getReservas();
+                System.out.print("Deseja adicionar uma nova reserva? (s/n): ");
+                String adicionarReserva = scanner.nextLine();
+                if (adicionarReserva.equalsIgnoreCase("s")) {
+                    Reserva reserva = buscarReservaPelosDados(scanner, entityManager);
                     if (reserva != null) {
-                        reserva.setEquipamento(equipamento);
-                        entityManager.merge(reserva);
                         reservasEquipamento.add(reserva);
-                    } else {
-                        System.out.println("Reserva não encontrada.");
                     }
+                }
 
-                    System.out.print("Deseja associar outra reserva? (s/n): ");
-                    continuar = scanner.nextLine();
-                } while (continuar.equalsIgnoreCase("s"));
+                System.out.print("Deseja remover alguma reserva existente? (s/n): ");
+                String removerReserva = scanner.nextLine();
+                if (removerReserva.equalsIgnoreCase("s")) {
+                    System.out.print("Digite o ID da reserva a ser removida: ");
+                    Long idReserva = scanner.nextLong();
+                    reservasEquipamento.removeIf(reserva -> reserva.getId().equals(idReserva));
+                }
 
                 equipamento.setReservas(reservasEquipamento);
                 entityManager.merge(equipamento);
             }
 
             transaction.commit();
+            System.out.println("Equipamento atualizado com sucesso!");
+        } else {
+            System.out.println("Equipamento não encontrado.");
+        }
 
-        } catch (RuntimeException exception) {
-            if (transaction != null && transaction.isActive()) {
-                try {
-                    transaction.rollback();
-                } catch (RuntimeException nestedException) {
-                    nestedException.printStackTrace();
-                }
-            }
-            throw exception;
-        } finally {
-            if (entityManager != null) {
-                entityManager.close();
-            }
+    } catch (RuntimeException exception) {
+        if (transaction != null && transaction.isActive()) {
+            transaction.rollback();
+        }
+        throw exception;
+    } finally {
+        if (entityManager != null) {
+            entityManager.close();
         }
     }
+}
 
-    public static void updateEquipamento() {
-        Scanner scanner = new Scanner(System.in);
-        EntityManager entityManager = null;
-        EntityTransaction transaction = null;
 
-        try {
-            EntityManagerFactory emFactory = Persistence.createEntityManagerFactory("academiaPU");
-            entityManager = emFactory.createEntityManager();
-            transaction = entityManager.getTransaction();
-            transaction.begin();
+   public static void deleteEquipamento() {
+    Scanner scanner = new Scanner(System.in);
+    EntityManager entityManager = null;
+    EntityTransaction transaction = null;
 
-            // Mudança para buscar equipamento por ID em vez de nome
-            System.out.print("Digite o ID do equipamento a ser atualizado: ");
-            Long idEquipamento = scanner.nextLong();
-            scanner.nextLine();  // Limpa o buffer
+    try {
+        EntityManagerFactory emFactory = Persistence.createEntityManagerFactory("academiaPU");
+        entityManager = emFactory.createEntityManager();
+        transaction = entityManager.getTransaction();
+        transaction.begin();
 
-            Equipamento equipamento = findEquipamentoById(entityManager, idEquipamento);
+        // Solicitar que o usuário selecione uma categoria
+        System.out.print("Digite a categoria do equipamento: ");
+        String categoriaEquipamento = scanner.nextLine();
 
-            if (equipamento != null) {
-                System.out.println("Equipamento encontrado. Atualize as informações ou pressione Enter para manter o valor atual.");
+        // Buscar equipamentos pela categoria
+        List<Equipamento> equipamentos = findEquipamentosByCategoria(entityManager, categoriaEquipamento);
 
-                System.out.print("Nome atual: " + equipamento.getNome() + ". Novo nome (ou pressione Enter para manter): ");
-                String nome = scanner.nextLine();
-                if (!nome.isEmpty()) {
-                    equipamento.setNome(nome);
-                }
+        if (equipamentos.isEmpty()) {
+            System.out.println("Nenhum equipamento encontrado para essa categoria.");
+            return;
+        }
 
-                System.out.print("Categoria atual: " + equipamento.getCategoria() + ". Nova categoria (ou pressione Enter para manter): ");
-                String categoria = scanner.nextLine();
-                if (!categoria.isEmpty()) {
-                    equipamento.setCategoria(categoria);
-                }
+        // Exibir lista de equipamentos com nome e ID
+        System.out.println("Equipamentos disponíveis na categoria " + categoriaEquipamento + ":");
+        for (Equipamento equipamento : equipamentos) {
+            System.out.println("ID: " + equipamento.getId() + " - Nome: " + equipamento.getNome());
+        }
 
-                System.out.print("Disponibilidade atual: " + equipamento.getDisponibilidade() + ". Nova disponibilidade (true/false) (ou pressione Enter para manter): ");
-                String disponibilidadeStr = scanner.nextLine();
-                if (!disponibilidadeStr.isEmpty()) {
-                    Boolean novaDisponibilidade = Boolean.parseBoolean(disponibilidadeStr);
-                    equipamento.setDisponibilidade(novaDisponibilidade);
-                }
+        // Solicitar que o usuário escolha um ID de equipamento
+        System.out.print("Digite o ID do equipamento que deseja excluir: ");
+        int equipamentoId = scanner.nextInt();
+        scanner.nextLine(); // Consumir o newline
 
-                // Atualização de reservas associadas
-                System.out.print("Deseja atualizar as reservas associadas ao equipamento? (s/n): ");
-                String respostaReserva = scanner.nextLine();
-                if (respostaReserva.equalsIgnoreCase("s")) {
-                    List<Reserva> reservasEquipamento = new ArrayList<>();
-                    String continuar;
-                    do {
-                        System.out.print("Digite o ID da reserva que deseja associar: ");
-                        Long idReserva = scanner.nextLong();
-                        scanner.nextLine();  // Limpa o buffer
+        // Buscar o equipamento pelo ID informado
+        Equipamento equipamento = entityManager.find(Equipamento.class, equipamentoId);
 
-                        Reserva reserva = findReservaById(entityManager, idReserva);
-                        if (reserva != null) {
-                            reserva.setEquipamento(equipamento);
-                            entityManager.merge(reserva);
-                            reservasEquipamento.add(reserva);
-                        } else {
-                            System.out.println("Reserva não encontrada.");
-                        }
+        if (equipamento == null || !equipamento.getCategoria().equals(categoriaEquipamento)) {
+            System.out.println("Equipamento não encontrado.");
+            return;
+        }
 
-                        System.out.print("Deseja associar outra reserva? (s/n): ");
-                        continuar = scanner.nextLine();
-                    } while (continuar.equalsIgnoreCase("s"));
+        // Verificar se o equipamento está associado a alguma reserva
+        if (equipamento.getReservas() != null && !equipamento.getReservas().isEmpty()) {
+            System.out.println("O equipamento possui reservas associadas. Exclua as reservas antes de excluir o equipamento.");
+            return;
+        }
 
-                    equipamento.setReservas(reservasEquipamento);
-                }
+        // Confirmar a exclusão
+        System.out.println("Equipamento encontrado: " + equipamento.getNome() + " (ID: " + equipamento.getId() + ")");
+        System.out.print("Tem certeza que deseja excluir este equipamento? (s/n): ");
+        String confirmacao = scanner.nextLine();
 
-                transaction.commit();
-                System.out.println("Equipamento atualizado com sucesso!");
+        if (confirmacao.equalsIgnoreCase("s")) {
+            entityManager.remove(equipamento);
+            transaction.commit();
+            System.out.println("Equipamento excluído com sucesso!");
+        } else {
+            System.out.println("Exclusão cancelada.");
+        }
 
-            } else {
-                System.out.println("Equipamento não encontrado.");
-            }
-
-        } catch (RuntimeException exception) {
-            if (transaction != null && transaction.isActive()) {
-                try {
-                    transaction.rollback();
-                } catch (RuntimeException nestedException) {
-                    nestedException.printStackTrace();
-                }
-            }
-            throw exception;
-        } finally {
-            if (entityManager != null) {
-                entityManager.close();
+    } catch (RuntimeException exception) {
+        if (transaction != null && transaction.isActive()) {
+            try {
+                transaction.rollback();
+            } catch (RuntimeException nestedException) {
+                nestedException.printStackTrace();
             }
         }
-    }
-
-    public static void deleteEquipamento() {
-        Scanner scanner = new Scanner(System.in);
-        EntityManager entityManager = null;
-        EntityTransaction transaction = null;
-
-        try {
-            EntityManagerFactory emFactory = Persistence.createEntityManagerFactory("academiaPU");
-            entityManager = emFactory.createEntityManager();
-            transaction = entityManager.getTransaction();
-            transaction.begin();
-
-            // Mudança para buscar equipamento por ID em vez de nome
-            System.out.print("Digite o ID do equipamento a ser excluído: ");
-            Long idEquipamento = scanner.nextLong();
-            scanner.nextLine();  // Limpa o buffer
-
-            Equipamento equipamento = findEquipamentoById(entityManager, idEquipamento);
-
-            if (equipamento == null) {
-                System.out.println("Equipamento não encontrado.");
-                return;
-            }
-
-            // Verificar se o equipamento está associado a alguma reserva
-            if (equipamento.getReservas() != null && !equipamento.getReservas().isEmpty()) {
-                System.out.println("O equipamento possui reservas associadas. Exclua as reservas antes de excluir o equipamento.");
-                return;
-            }
-
-            System.out.println("Equipamento encontrado: " + equipamento.getNome());
-            System.out.print("Tem certeza que deseja excluir este equipamento? (s/n): ");
-            String confirmacao = scanner.nextLine();
-
-            if (confirmacao.equalsIgnoreCase("s")) {
-                entityManager.remove(equipamento);
-                transaction.commit();
-                System.out.println("Equipamento excluído com sucesso!");
-            } else {
-                System.out.println("Exclusão cancelada.");
-            }
-
-        } catch (RuntimeException exception) {
-            if (transaction != null && transaction.isActive()) {
-                try {
-                    transaction.rollback();
-                } catch (RuntimeException nestedException) {
-                    nestedException.printStackTrace();
-                }
-            }
-            throw exception;
-        } finally {
-            if (entityManager != null) {
-                entityManager.close();
-            }
+        throw exception;
+    } finally {
+        if (entityManager != null) {
+            entityManager.close();
         }
     }
+}
+
+// Método auxiliar para buscar equipamentos pela categoria
+private static List<Equipamento> findEquipamentosByCategoria(EntityManager entityManager, String categoria) {
+    Query query = entityManager.createQuery("SELECT e FROM Equipamento e WHERE e.categoria = :categoria");
+    query.setParameter("categoria", categoria);
+    return query.getResultList();
+}
 
     public static void readEquipamentos() {
         EntityManager entityManager = null;
