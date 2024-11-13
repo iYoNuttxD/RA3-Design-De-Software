@@ -1,5 +1,6 @@
-package crud;
-import model.*;
+package RA3Design.crud;
+
+import RA3Design.model.*;
 import jakarta.persistence.*;
 
 import java.text.SimpleDateFormat;
@@ -104,9 +105,9 @@ public class ReservaCrud {
             List<Reserva> reservas = findAllReservas(entityManager);
 
             if (reservas == null || reservas.isEmpty()) {
-                System.out.println("Nenhum cliente encontrado.");
+                System.out.println("Nenhuma reserva encontrada.");
             } else {
-                System.out.println("Lista de Clientes:");
+                System.out.println("Lista de reservas:");
                 for (Reserva reserva : reservas) {
                     System.out.println("=======================================");
                     System.out.println("Id: " + reserva.getId());
@@ -243,27 +244,6 @@ public class ReservaCrud {
             }
         }
     }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
     private static Reserva findReservaByDataHora(EntityManager entityManager, Date dataReserva, Date horaReserva) {
         Query query = entityManager.createQuery("SELECT r FROM Reserva r WHERE r.dataReserva = :dataReserva AND " +
