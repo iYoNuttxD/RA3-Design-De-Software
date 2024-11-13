@@ -4,6 +4,7 @@ import RA3Design.crud.ClienteCrud;
 import RA3Design.crud.PersonalTrainerCrud;
 import RA3Design.crud.EquipamentoCrud;
 import RA3Design.crud.PlanoTreinoCrud;
+import RA3Design.crud.ReservaCrud;
 
 import java.util.Scanner;
 
@@ -18,6 +19,7 @@ public class Main {
             System.out.println("2 - CRUD de Personal Trainer");
             System.out.println("3 - CRUD de Equipamento");
             System.out.println("4 - CRUD de Plano de Treino");
+            System.out.println("5 - CRUD de Reserva");
             System.out.println("0 - Sair");
             System.out.print("Escolha uma opção: ");
             opcao = scanner.nextInt();
@@ -35,6 +37,9 @@ public class Main {
                     break;
                 case 4:
                     exibirMenuCrudPlanoTreino(scanner);
+                    break;
+                case 5:
+                    exibirMenuCrudReserva(scanner);
                     break;
                 case 0:
                     System.out.println("Saindo...");
@@ -189,5 +194,41 @@ public class Main {
                     System.out.println("Opção inválida. Tente novamente.");
             }
         } while (opcaoCrudPlanoTreino != 0);
+    }
+
+    private static void exibirMenuCrudReserva(Scanner scanner) {
+        int opcaoCrudReserva;
+
+        do {
+            System.out.println("========= CRUD Reserva =========");
+            System.out.println("1 - Criar Reserva");
+            System.out.println("2 - Ler Reserva");
+            System.out.println("3 - Atualizar Reserva");
+            System.out.println("4 - Excluir Reserva");
+            System.out.println("0 - Voltar ao Menu Principal");
+            System.out.print("Escolha uma opção: ");
+            opcaoCrudReserva = scanner.nextInt();
+            scanner.nextLine();
+
+            switch (opcaoCrudReserva) {
+                case 1:
+                    ReservaCrud.createReserva();
+                    break;
+                case 2:
+                    ReservaCrud.readReservas();
+                    break;
+                case 3:
+                    ReservaCrud.updateReserva();
+                    break;
+                case 4:
+                    ReservaCrud.deleteReserva();
+                    break;
+                case 0:
+                    System.out.println("Voltando ao menu principal...");
+                    break;
+                default:
+                    System.out.println("Opção inválida. Tente novamente.");
+            }
+        } while (opcaoCrudReserva != 0);
     }
 }
