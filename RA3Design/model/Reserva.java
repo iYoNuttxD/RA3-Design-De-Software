@@ -1,15 +1,16 @@
 package RA3Design.model;
+
 import jakarta.persistence.*;
 import java.util.Date;
 
 @Entity
 public class Reserva {
     @Id
-    @GeneratedValue(strategy=GenerationType.IDENTITY)
-    private int id;
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
-    private Date DataReserva;
-    private Date HoraReserva;
+    private Date dataReserva;
+    private Date horaReserva;
 
     @ManyToOne
     @JoinColumn(name = "cliente_id")
@@ -19,44 +20,50 @@ public class Reserva {
     @JoinColumn(name = "equipamento_id")
     private Equipamento equipamento;
 
-
-    public Reserva(Date DataReserva, Date HoraReserva){
-        this.DataReserva = DataReserva;
-        this.HoraReserva = HoraReserva;
+    public Reserva(Long id, Date dataReserva, Date horaReserva, Cliente cliente, Equipamento equipamento) {
+        this.id = id;
+        this.dataReserva = dataReserva;
+        this.horaReserva = horaReserva;
+        this.cliente = cliente;
+        this.equipamento = equipamento;
     }
 
-    public Reserva(){}
+    public Reserva () {}
 
-    public int getId() {
+    public Long getId() {
         return id;
     }
 
+    public void setId(Long id) {
+        this.id = id;
+    }
+
     public Date getDataReserva() {
-        return DataReserva;
+        return dataReserva;
+    }
+
+    public void setDataReserva(Date dataReserva) {
+        this.dataReserva = dataReserva;
     }
 
     public Date getHoraReserva() {
-        return HoraReserva;
+        return horaReserva;
+    }
+
+    public void setHoraReserva(Date horaReserva) {
+        this.horaReserva = horaReserva;
     }
 
     public Cliente getCliente() {
         return cliente;
     }
 
-    public Equipamento getEquipamento() {
-        return equipamento;
-    }
-
-    public void setDataReserva(Date dataReserva) {
-        DataReserva = dataReserva;
-    }
-
-    public void setHoraReserva(Date horaReserva) {
-        HoraReserva = horaReserva;
-    }
-
     public void setCliente(Cliente cliente) {
         this.cliente = cliente;
+    }
+
+    public Equipamento getEquipamento() {
+        return equipamento;
     }
 
     public void setEquipamento(Equipamento equipamento) {
