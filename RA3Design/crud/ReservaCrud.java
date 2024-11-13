@@ -3,8 +3,6 @@ package RA3Design.crud;
 import RA3Design.model.*;
 import jakarta.persistence.*;
 
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Scanner;
@@ -30,6 +28,7 @@ public class ReservaCrud {
                 try {
                     java.text.SimpleDateFormat sdfData = new java.text.SimpleDateFormat("dd/MM/yyyy");
                     dataReserva = sdfData.parse(dataReservaStr);
+                    reserva.setDataReserva(dataReserva);
                 } catch (java.text.ParseException e) {
                     System.out.println("Erro ao converter data da reserva.");
                 }
@@ -42,6 +41,7 @@ public class ReservaCrud {
                 try {
                     java.text.SimpleDateFormat sdfHora = new java.text.SimpleDateFormat("HH:mm");
                     horaReserva = sdfHora.parse(horaReservaStr);
+                    reserva.setHoraReserva(horaReserva);
                 } catch (java.text.ParseException e) {
                     System.out.println("Erro ao converter hora da reserva.");
                 }
