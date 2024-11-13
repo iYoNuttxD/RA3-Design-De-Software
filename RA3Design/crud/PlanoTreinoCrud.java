@@ -6,7 +6,6 @@ import RA3Design.model.PlanoTreino;
 import jakarta.persistence.*;
 
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Scanner;
@@ -183,6 +182,8 @@ public class PlanoTreinoCrud {
                         System.out.println("Erro ao converter a nova data de fim.");
                     }
                 }
+
+                entityManager.merge(planoTreino);
 
                 System.out.print("Deseja atualizar o cliente do Plano de Treino? (s/n): ");
                 String respostaCliente = scanner.nextLine();

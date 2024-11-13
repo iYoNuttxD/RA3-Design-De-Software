@@ -237,6 +237,8 @@ public class ClienteCrud {
                     }
                 }
 
+                entityManager.merge(cliente);
+
                 System.out.print("Deseja atualizar o plano de treino do cliente? (s/n): ");
                 String respostaPlano = scanner.nextLine();
                 if (respostaPlano.equalsIgnoreCase("s")) {

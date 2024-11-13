@@ -181,6 +181,8 @@ public class PersonalTrainerCrud {
                     personalTrainer.setTelefone(telefone);
                 }
 
+                entityManager.merge(personalTrainer);
+
                 System.out.print("Deseja atualizar o plano de treino do Personal Trainer? (s/n): ");
                 String respostaPlano = scanner.nextLine();
                 if (respostaPlano.equalsIgnoreCase("s")) {
