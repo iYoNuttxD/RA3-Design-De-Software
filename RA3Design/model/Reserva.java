@@ -1,4 +1,4 @@
-package model;
+package RA3Design.model;
 import jakarta.persistence.*;
 import java.util.Date;
 
