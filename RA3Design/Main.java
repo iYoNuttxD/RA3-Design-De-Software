@@ -19,7 +19,7 @@ public class Main {
             System.out.println("2 - CRUD de Personal Trainer");
             System.out.println("3 - CRUD de Equipamento");
             System.out.println("4 - CRUD de Plano de Treino");
-            System.out.println("5 - CRUD de Reserva");
+            System.out.println("5 - CRUD de Reserva"); // Nova opção para CRUD de Reserva
             System.out.println("0 - Sair");
             System.out.print("Escolha uma opção: ");
             opcao = scanner.nextInt();
@@ -39,7 +39,7 @@ public class Main {
                     exibirMenuCrudPlanoTreino(scanner);
                     break;
                 case 5:
-                    exibirMenuCrudReserva(scanner);
+                    exibirMenuCrudReserva(scanner); // Chama o método de CRUD de Reserva
                     break;
                 case 0:
                     System.out.println("Saindo...");
@@ -198,11 +198,10 @@ public class Main {
 
     private static void exibirMenuCrudReserva(Scanner scanner) {
         int opcaoCrudReserva;
-
         do {
             System.out.println("========= CRUD Reserva =========");
             System.out.println("1 - Criar Reserva");
-            System.out.println("2 - Ler Reserva");
+            System.out.println("2 - Ler Reservas");
             System.out.println("3 - Atualizar Reserva");
             System.out.println("4 - Excluir Reserva");
             System.out.println("0 - Voltar ao Menu Principal");
